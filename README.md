@@ -1,2 +1,2 @@
-# Vim-NVim-Config
-Personal Vim and NVim Cnofig
+# NVim-Config
+Personal NVim Cnofig

@@ -98,7 +98,7 @@ require('competitest').setup {
     multiple_testing = -1,
     maximum_time = 5000,
     output_compare_method = 'squish',
-    view_output_diff = false,
+    view_output_diff = true,
     testcases_directory = '.',
     testcases_use_single_file = true,
     testcases_auto_detect_storage = true,
@@ -128,3 +128,4 @@ vim.keymap.set('n', '<Leader>2', ':CompetiTest add_testcase<CR>')
 vim.keymap.set('n', '<Leader>3', ':CompetiTest run<CR>')
 vim.keymap.set('n', '<Leader>4', ':CompetiTest run_no_compile<CR>')
 vim.keymap.set('n', '<Leader>5', ':CompetiTest receive problem<CR>')
+vim.keymap.set('n', '<Leader>6', ':CompetiTest receive contest<CR>')

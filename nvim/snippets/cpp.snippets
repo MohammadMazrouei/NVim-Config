@@ -1,33 +1,39 @@
-snippet snippets "Snippets for c++"
+snippet snippets "Snippets for C++"
 	/*
 	#Basics#
-	beg0
-	beg1
-	beg2
+	beg
 	debug
+	dbg
+	rng
+	power
+	mint
 
 	#Data Structures#
 	mstack
 	mqueue
-	sparse
 	dsu
+	sparse
 	fenwick1
 	fenwick2
 	fenwick3
 	segtree
 	segtreelazy
+	triestr
+	triebit
 	segtree2d
 	ordered_set
+	treap
 
 	#Graph#
 	dfs
 	bfs
 	topsort
-	scc
-	dcycle
+	bipartite
 	ucycle
-	art_points
+	dcycle
 	bridges
+	art_points
+	scc
 	centroids
 	euler_tour
 	floyd
@@ -45,98 +51,28 @@ snippet snippets "Snippets for c++"
 	manacher
 	suffix_array
 
-	#Math#
-	mint
-	comb
-	matrix
+	#Number Theory#
+	exgcd
 	sieve
+	linear_sieve
+
+	#Math#
+	matrix
 	segmented_sieve
 	miller_rabin
 	convert_base
-	pw
 
 	#Geometry#
-	table
-	geo2d
+	move
 
 	#Miscellaneous#
+	mex
+	mex2
 	arpa
 	*/
 	${0}
 
-snippet beg0 "Start Template 0"
-	#include <bits/stdc++.h>
-	using namespace std;
-
-	#pragma GCC optimize ("O3")
-	#pragma GCC target ("sse4")
-
-	using ll = long long;
-
-	template <typename T> using pqg = priority_queue<T>;
-	template <typename T> using pql = priority_queue<T, vector<T>, greater<T>>;
-
-	template <typename T> bool cmin(T &a, const T &b) { return b < a ? a = b, 1 : 0; }
-	template <typename T> bool cmax(T &a, const T &b) { return a < b ? a = b, 1 : 0; }
-
-	mt19937_64 rng(chrono::steady_clock::now().time_since_epoch().count());
-	#define uid(a, b) uniform_int_distribution<int64_t>(a, b)(rng)
-
-	#ifdef DEBUG
-	#include "/home/mohammad/code/debug.h"
-	#else
-	#define dbg(...)
-	#define dbgarr(...)
-	#endif
-
-	void solve() {
-		${0}	
-	}
-
-	int32_t main() {
-		ios_base::sync_with_stdio(false);
-		cin.tie(nullptr);
-
-		int t = 1;
-		$1cin >> t;
-
-		while (t--) {
-			solve();
-		}
-
-		return 0;
-	}
-
-snippet beg1 "Start Template 1"
-	#include <bits/stdc++.h>
-	using namespace std;
-
-	#ifdef DEBUG
-	#include "/home/mohammad/code/debug.h"
-	#else
-	#define dbg(...)
-	#define dbgarr(...)
-	#endif
-
-	void solve() {
-		${0}	
-	}
-
-	int32_t main() {
-		ios_base::sync_with_stdio(false);
-		cin.tie(nullptr);
-
-		int t = 1;
-		$1cin >> t;
-
-		while (t--) {
-			solve();
-		}
-
-		return 0;
-	}
-
-snippet beg2 "Start Template 2"
+snippet beg "Start Template"
 	#include <bits/stdc++.h>
 	using namespace std;
 
@@ -160,14 +96,18 @@ snippet beg2 "Start Template 2"
 
 snippet debug "Debug Template"
 	#define dbg(...) cerr << __DEBUG_UTIL__::outer << __LINE__ << ": [", __DEBUG_UTIL__::printer(#__VA_ARGS__, __VA_ARGS__)
-	#define dbgarr(...) cerr << __DEBUG_UTIL__::outer << __LINE__ << ": [", __DEBUG_UTIL__::printerArr(#__VA_ARGS__, __VA_ARGS__)
 
 	namespace __DEBUG_UTIL__ {
+		const string WHITE = "\033[0;m";
+		const string RED = "\033[0;31m";
+		const string BLUE = "\033[0;34m";
+		const string GREEN = "\033[0;32m";
+
 		bool colored_output = false; 
-		string white = colored_output ? "\033[0;m" : "";
-		string outer = colored_output ? "\033[0;31m" : "";     // red
-		string var_name = colored_output ? "\033[1;34m" : "";  // blue
-		string var_value = colored_output ? "\033[1;32m" : ""; // green
+		string white = colored_output ? WHITE : "";
+		string outer = colored_output ? RED : "";
+		string var_name = colored_output ? BLUE : "";
+		string var_value = colored_output ? GREEN : "";
 
 		template <typename T>
 		concept is_iterable = requires(T &&x) { begin(x); } && !is_same_v<remove_cvref_t<T>, string>;
@@ -187,9 +127,9 @@ snippet debug "Debug Template"
 
 		void print(vector<bool> &&v) { 
 			/* Overloaded this because stl optimizes vector<bool> by using
-			 _Bit_reference instead of bool to conserve space. */
+			   _Bit_reference instead of bool to conserve space. */
 			int f = 0;
-			cerr << '{';
+			cerr << "{";
 			for (auto &&i : v) {
 				cerr << (f++ ? "," : "") << (i ? "T" : "F");
 			}
@@ -202,8 +142,8 @@ snippet debug "Debug Template"
 				if (size(x) && is_iterable<decltype(*(begin(x)))>) { 
 					/* Iterable inside Iterable */
 					int f = 0;
-					cerr << "\n~~~~~\n";
 					int w = max(0, (int)log10(size(x) - 1)) + 2;
+					cerr << "\n~~~~~\n";
 					for (auto &&i : x) {
 						cerr << setw(w) << left << f++, print(i), cerr << "\n";
 					}
@@ -220,7 +160,7 @@ snippet debug "Debug Template"
 				}
 			}
 			else if constexpr (requires { x.pop(); }) {
-				/* Stacks, Priority Queues, Queues */
+				/* Stacks, Queues, Priority Queues */
 				auto temp = x;
 				int f = 0;
 				cerr << "{";
@@ -238,15 +178,16 @@ snippet debug "Debug Template"
 			}
 			else if constexpr (requires { x.first; x.second; }) {
 				/* Pair */
-				cerr << '(', print(x.first), cerr << ',', print(x.second), cerr << ')';
+				cerr << "(", print(x.first), cerr << ",", print(x.second), cerr << ")";
 			}
 			else if constexpr (requires { get<0>(x); }) {
 				/* Tuple */
 				int f = 0;
-				cerr << '(', apply([&f](auto... args) {
-								  ((cerr << (f++ ? "," : ""), print(args)), ...);
-							 }, x);
-				cerr << ')';
+				cerr << "("; 
+				apply([&f](auto... args) {
+					((cerr << (f++ ? "," : ""), print(args)), ...);
+					}, x);
+				cerr << ")";
 			}
 			else {
 				cerr << x;
@@ -274,37 +215,250 @@ snippet debug "Debug Template"
 				cerr << outer << "]\n" << white;
 			}
 		}
-
-		template <typename T, typename... V>
-		void printerArr(const char *names, T arr[], size_t N, V... tail) {
-			size_t i = 0;
-			cerr << var_name;
-			for (; names[i] and names[i] != ','; i++) {
-				cerr << names[i];
-			}
-			for (i++; names[i] and names[i] != ','; i++);
-			cerr << outer << " = " << var_value << "{";
-			for (size_t ind = 0; ind < N; ind++) {
-				cerr << (ind ? "," : ""), print(arr[ind]);
-			}
-			cerr << "}";
-			if constexpr (sizeof...(tail)) {
-				cerr << outer << " ||", printerArr(names + i + 1, tail...);
-			}
-			else {
-				cerr << outer << "]\n" << white;
-			}
-		}
 	}
 	${0}
 
-snippet mstack "Minimum Stack, O(1)" 
+snippet dbg "Debug Headers"
+	#ifdef DEBUG
+	#include "/home/mohammad/code/debug.h"
+	#else
+	#define dbg(...)
+	#endif
+	${0}
+
+snippet rng "Random Generator"
+	mt19937_64 rng(chrono::steady_clock::now().time_since_epoch().count());
+	#define uid(a, b) uniform_int_distribution<int64_t>(a, b)(rng)
+	${0}
+
+snippet power "Binary Exponentiation, O(log(b))
 	template <typename T>
+	T power(T a, int64_t b, int64_t m) {
+		assert(b >= 0);
+		T res{1};
+		while (b) {
+			if (b & 1) {
+				res = res * a % m;
+			}
+			a = a * a % m;
+			b >>= 1;
+		}
+		return res;
+	}
+	${0}
+
+snippet mint "Struct Modular Number, MOD Must be Prime" 
+	template <typename M>
+	struct Modular {
+	public:
+		using Type = typename decay<decltype(M::value)>::type;
+
+		constexpr Modular() : value() {}
+		template <typename T>
+		Modular(const T &x) {
+			value = normalize(x);
+		}
+
+		const Type operator()() const { return value; }
+		template <typename T>
+		explicit operator T() const { return static_cast<T>(value); }
+		constexpr static Type mod() { return M::value; }
+
+		template <typename T>
+		static Type normalize(const T &x) {
+			Type v;
+			if (-mod() <= x && x < mod()) {
+				v = static_cast<Type>(x);
+			}
+			else {
+				v = static_cast<Type>(x % mod());
+			}
+			if (v < 0) {
+				v += mod();
+			}
+			return v;
+		}
+
+		Modular& operator++() { return *this += 1; }
+		Modular& operator--() { return *this -= 1; }
+		Modular operator++(int) { Modular res(*this); *this += 1; return res; }
+		Modular operator--(int) { Modular res(*this); *this -= 1; return res; }
+		Modular operator-() const { return Modular(-value); }
+
+		Modular& operator+=(const Modular &other) { if ((value += other.value) >= mod()) value -= mod(); return *this; }
+		template <typename T> Modular& operator+=(const T &other) { return *this += Modular(other); }
+
+		Modular& operator-=(const Modular &other) { if ((value -= other.value) < 0) value += mod(); return *this; }
+		template <typename T> Modular& operator-=(const T &other) { return *this -= Modular(other); }
+
+		template <typename T = M>
+		typename enable_if<is_same<typename Modular<T>::Type, int>::value, Modular>::type& operator*=(const Modular &other) {
+			value = normalize(static_cast<int64_t>(value) * static_cast<int64_t>(other.value));
+			return *this;
+		}
+		template <typename T = M>
+		typename enable_if<is_same<typename Modular<T>::Type, int64_t>::value, Modular>::type& operator*=(const Modular &other) {
+			int64_t q = int64_t(static_cast<long double>(value) * other.value / mod());
+			value = normalize(value * other.value - q * mod());
+			return *this;
+		}
+		template <typename T = M>
+		typename enable_if<!is_integral<typename Modular<T>::Type>::value, Modular>::type& operator*=(const Modular &other) {
+			value = normalize(value * other.value);
+			return *this;
+		}
+
+		Modular& operator/=(const Modular &other) { return *this *= inverse(other); }
+
+		template <typename T> friend Modular<T> operator+(const Modular<T> &lhs, const Modular<T> &rhs) { return Modular<T>(lhs) += rhs; }
+		template <typename T, typename U> friend Modular<T> operator+(const Modular<T> &lhs, U rhs) { return Modular<T>(lhs) += rhs; }
+		template <typename T, typename U> friend Modular<T> operator+(U lhs, const Modular<T> &rhs) { return Modular<T>(lhs) += rhs; }
+		 
+		template <typename T> friend Modular<T> operator-(const Modular<T> &lhs, const Modular<T> &rhs) { return Modular<T>(lhs) -= rhs; }
+		template <typename T, typename U> friend Modular<T> operator-(const Modular<T> &lhs, U rhs) { return Modular<T>(lhs) -= rhs; }
+		template <typename T, typename U> friend Modular<T> operator-(U lhs, const Modular<T> &rhs) { return Modular<T>(lhs) -= rhs; }
+		 
+		template <typename T> friend Modular<T> operator*(const Modular<T> &lhs, const Modular<T> &rhs) { return Modular<T>(lhs) *= rhs; }
+		template <typename T, typename U> friend Modular<T> operator*(const Modular<T> &lhs, U rhs) { return Modular<T>(lhs) *= rhs; }
+		template <typename T, typename U> friend Modular<T> operator*(U lhs, const Modular<T> &rhs) { return Modular<T>(lhs) *= rhs; }
+		 
+		template <typename T> friend Modular<T> operator/(const Modular<T> &lhs, const Modular<T> &rhs) { return Modular<T>(lhs) /= rhs; }
+		template <typename T, typename U> friend Modular<T> operator/(const Modular<T> &lhs, U rhs) { return Modular<T>(lhs) /= rhs; }
+		template <typename T, typename U> friend Modular<T> operator/(U lhs, const Modular<T> &rhs) { return Modular<T>(lhs) /= rhs; }
+
+		template <typename T> friend bool operator==(const Modular<T> &lhs, const Modular<T> &rhs) { return lhs.value == rhs.value; }
+		template <typename T, typename U> friend bool operator==(const Modular<T> &lhs, U rhs) { return lhs == Modular<T>(rhs); }
+		template <typename T, typename U> friend bool operator==(U lhs, const Modular<T> &rhs) { return Modular<T>(lhs) == rhs; }
+
+		template <typename T> friend bool operator!=(const Modular<T> &lhs, const Modular<T> &rhs) { return !(lhs == rhs); }
+		template <typename T, typename U> friend bool operator!=(const Modular<T> &lhs, U rhs) { return !(lhs == rhs); }
+		template <typename T, typename U> friend bool operator!=(U lhs, const Modular<T> &rhs) { return !(lhs == rhs); }
+
+		template <typename T> friend bool operator<(const Modular<T> &lhs, const Modular<T> &rhs) { return lhs.value < rhs.value; }
+		template <typename T> friend bool operator>(const Modular<T> &lhs, const Modular<T> &rhs) { return lhs.value > rhs.value; }
+		template <typename T> friend bool operator<=(const Modular<T> &lhs, const Modular<T> &rhs) { return lhs.value <= rhs.value; }
+		template <typename T> friend bool operator>=(const Modular<T> &lhs, const Modular<T> &rhs) { return lhs.value >= rhs.value; }
+
+		template <typename U, typename T>
+		friend U& operator<<(U &stream, const Modular<T> &number) {
+			return stream << number();
+		}
+
+		template <typename U, typename T>
+		friend U& operator>>(U &stream, Modular<T> &number) {
+			typename common_type<typename Modular<T>::Type, int64_t>::type x;
+			stream >> x;
+			number.value = Modular<T>::normalize(x);
+			return stream;
+		}
+
+		template <typename T, typename U>
+		friend Modular<T> power(Modular<T> a, U b) {
+			assert(b >= 0);
+			Modular<T> res = 1;
+			while (b) {
+				if (b & 1) {
+					res *= a;
+				}
+				a *= a;
+				b >>= 1;
+			}
+			return res;
+		}
+
+		template<typename T>
+		friend Modular<T> inverse(const Modular<T> &a) {
+			assert(a.value != 0);
+			return power(a, mod() - 2);
+		}
+
+		template <typename T>
+		friend string to_string(const Modular<T> &number) {
+		  return to_string(number());
+		}
+
+	private:
+		Type value; 
+	};
+
+	//constexpr int MOD = 998244353;
+	constexpr int MOD = 1000000007;
+	using Mint = Modular<integral_constant<decay<decltype(MOD)>::type, MOD>>;
+
+	/*
+	// Dynamic Modular
+	using ModType = int;
+	struct VarMod { static ModType value; };
+	ModType VarMod::value = 1000000007;
+	ModType &MOD = VarMod::value;
+	using Mint = Modular<VarMod>;
+	*/
+
+	struct Comb {
+		int n;
+		vector<Mint> _fact;
+		vector<Mint> _inv_fact;
+		vector<Mint> _inv;
+		
+		Comb() : n{0}, _fact{1}, _inv_fact{1}, _inv{0} {}
+		Comb(int _n) : Comb() {
+			init(_n);
+		}
+		
+		void init(int m) {
+			if (m <= n) {
+				return;
+			}
+			_fact.resize(m + 1);
+			_inv_fact.resize(m + 1);
+			_inv.resize(m + 1);
+			
+			for (int i = n + 1; i <= m; i++) {
+				_fact[i] = _fact[i - 1] * i;
+			}
+			_inv_fact[m] = inverse(_fact[m]);
+			for (int i = m; i > n; i--) {
+				_inv_fact[i - 1] = _inv_fact[i] * i;
+				_inv[i] = _inv_fact[i] * _fact[i - 1];
+			}
+			n = m;
+		}
+		
+		Mint fact(int m) {
+			if (m > n) {
+				init(2 * m);
+			}
+			return _fact[m];
+		}
+		Mint inv_fact(int m) {
+			if (m > n) {
+				init(2 * m);
+			}
+			return _inv_fact[m];
+		}
+		Mint inv(int m) {
+			if (m > n) {
+				init(2 * m);
+			}
+			return _inv[m];
+		}
+		Mint comb(int m, int k) {
+			if (k < 0 || k > m) {
+				return 0;
+			}
+			return fact(m) * inv_fact(k) * inv_fact(m - k);
+		}
+	} comb;
+	${0}
+
+snippet mstack "Minimum Stack, O(1)" 
+	template <typename T, typename Cmp = less<T>>
 	struct MStack {
 		stack<pair<T, T>> st;
+		const Cmp cmp = Cmp();
 		
-		void push(T v) {
-			T mn = st.empty() ? v : min(v, st.top().second);
+		void push(const T &v) {
+			T mn = st.empty() ? v : min(v, st.top().second, cmp);
 			st.emplace(v, mn);
 		}
 		void pop() {
@@ -316,29 +470,30 @@ snippet mstack "Minimum Stack, O(1)"
 		T get() {
 			return st.top().second;
 		}
-		bool empty() {
+		bool empty() const {
 			return st.empty();
 		}
-		int size() {
+		int size() const {
 			return st.size();
 		}
 	};
 	${0}
 
 snippet mqueue "Minimum Queue, O(1)" 
-	template <typename T>
+	template <typename T, typename Cmp = less<T>>
 	struct MQueue {
 		stack<pair<T, T>> st1, st2;
+		const Cmp cmp = Cmp();
 		
-		void push(T v) {
-			T mn = st1.empty() ? v : min(v, st1.top().second);
+		void push(const T &v) {
+			T mn = st1.empty() ? v : min(v, st1.top().second, cmp);
 			st1.emplace(v, mn);
 		}
 		void pop() {
 			if (st2.empty()) {
 				while (!st1.empty()) {
 					T v = st1.top().first;
-					T mn = st2.empty() ? v : min(v, st2.top().second);
+					T mn = st2.empty() ? v : min(v, st2.top().second, cmp);
 					st1.pop();
 					st2.emplace(v, mn);
 				}
@@ -349,7 +504,7 @@ snippet mqueue "Minimum Queue, O(1)"
 			if (st2.empty()) {
 				while (!st1.empty()) {
 					T v = st1.top().first;
-					T mn = st2.empty() ? v : min(v, st2.top().second);
+					T mn = st2.empty() ? v : min(v, st2.top().second, cmp);
 					st1.pop();
 					st2.emplace(v, mn);
 				}
@@ -360,72 +515,34 @@ snippet mqueue "Minimum Queue, O(1)"
 			if (st1.empty() || st2.empty()) {
 				return st1.empty() ? st2.top().second : st1.top().second;
 			}
-			return min(st1.top().second, st2.top().second);
+			return min(st1.top().second, st2.top().second, cmp);
 		}
-		bool empty() {
+		bool empty() const {
 			return st1.empty() && st2.empty();
 		}
-		int size() {
+		int size() const {
 			return st1.size() + st2.size();
 		}
 	};
 	${0}
 
-snippet sparse "RMQ, build -> O(n*log(n)), query -> O(1)"
-	// with global array is faster (2s vs 3s for n = 1e7)
-	// constexpr n = 1e7, lg = 25; int t[n][lg];
-	template <typename T>
-	struct SparseTable {
-		int n, lg;
-		vector<vector<T>> t;
-
-		SparseTable() {}
-		SparseTable(const vector<T> &v) {
-			build(v);
-		}
-
-		inline T f(const T &a, const T &b) const {
-			return min(a, b);
-		}
-		void build(const vector<T> &v) {
-			n = v.size();
-			lg = __lg(n) + 2;
-			t.assign(n, vector<T>(lg));
-
-			for (int i = 0; i < n; i++) {
-				t[i][0] = v[i];
-			}
-			for (int k = 1; k < lg; k++) {
-				for (int i = 0; i + (1 << k) - 1 < n; i++) {
-					t[i][k] = f(t[i][k - 1], t[i + (1 << (k - 1))][k - 1]);
-				}
-			}
-		}
-		T get(int l, int r) { 
-			assert(l >= 0 && l <= r && r < n);
-			int k = __builtin_clz(1) - __builtin_clz(r - l + 1);
-			//int k = __builtin_clzll(1) - __builtin_clzll(r - l + 1);
-			return f(t[l][k], t[r - (1 << k) + 1][k]);
-		}
-	};
-	${0}
-
-snippet dsu "Disjoint Set Union, O(1)" 
+snippet dsu "Disjoint Set Union, O(alpha(n))"
 	struct DSU {
-		vector<int> par, sz;
 		int c;
+		vector<int> par, sz;
 		
-		DSU(int n) : c(n) {
+		DSU() {}
+		DSU(int n) {
+			init(n);
+		}
+
+		void init(int n) {
+			c = n;
 			par.resize(n);
 			iota(par.begin(), par.end(), 0);
 			sz.assign(n, 1);
 		}
 
-		void make(int a) {
-			par[a] = a;
-			sz[a] = 1;
-			c++;
-		}
 		int find(int a) {
 			return (par[a] == a ? a : (par[a] = find(par[a])));
 		}
@@ -452,7 +569,46 @@ snippet dsu "Disjoint Set Union, O(1)"
 	};
 	${0}
 
-snippet fenwick1 "Point_Update & Range_Query, O(log(n))"
+snippet sparse "RMQ, build -> O(n*log(n)), query -> O(1)"
+	// with global array is faster (2s vs 3s for n = 1e7)
+	// constexpr int n = 1e7, lg = 25; int t[n][lg];
+	template <typename T, typename Cmp = less<T>>
+	struct SparseTable {
+		int n;
+		vector<vector<T>> t;
+		const Cmp cmp = Cmp();
+
+		SparseTable() {}
+		SparseTable(const vector<T> &v) {
+			build(v);
+		}
+
+		inline T f(const T &a, const T &b) const {
+			return min(a, b, cmp);
+		}
+		void build(const vector<T> &v) {
+			n = v.size();
+			const int lg = __lg(n) + 2;
+			t.assign(n, vector<T>(lg));
+
+			for (int i = 0; i < n; i++) {
+				t[i][0] = v[i];
+			}
+			for (int k = 1; k < lg; k++) {
+				for (int i = 0; i + (1 << k) - 1 < n; i++) {
+					t[i][k] = f(t[i][k - 1], t[i + (1 << (k - 1))][k - 1]);
+				}
+			}
+		}
+		T get(int l, int r) { 
+			assert(l >= 0 && l <= r && r < n);
+			int k = __lg(r - l + 1);
+			return f(t[l][k], t[r - (1 << k) + 1][k]);
+		}
+	};
+	${0}
+
+snippet fenwick1 "Point Update & Range Query, O(log(n))"
 	template <typename T>
 	struct FenwickTree {
 		int n;
@@ -465,9 +621,8 @@ snippet fenwick1 "Point_Update & Range_Query, O(log(n))"
 		// O(n) Construction
 		FenwickTree(const vector<T> &v) {
 			n = v.size();
-			f.assign(n, T{});
+			f.assign(v.begin(), v.end());;
 			for (int i = 0; i < n; i++) {
-				f[i] += v[i];
 				int r = i | (i + 1);
 				if (r < n) {
 					f[r] += f[i];
@@ -482,48 +637,43 @@ snippet fenwick1 "Point_Update & Range_Query, O(log(n))"
 			}
 		}
 		T get(int x) {
-			T ans{};
+			T res{};
 			for (int i = x; i >= 0; i = (i & (i + 1)) - 1) {
-				ans += f[i];
+				res += f[i];
 			}
-			return ans;
+			return res;
 		}
 		T get(int l, int r) {
 			assert(l >= 0 && l <= r && r < n);
 			return get(r) - get(l - 1);
 		}
-		// Return Kth smallest element
+    	// Lower bound on prefix sum array (every a[i] must be non-negative)
 		int select(const T &k) {
-			int x = (1 << (__lg(n) + 1)) - 1;
 			T sum{};
-			for (int i = 1 << __lg(n); i; i >>= 1) {
-				if (x >= n || sum + f[x] >= k) {
-					x -= i;
-				}
-				else if (x + i < n && sum + f[x] + f[x + i] < k) {
-					sum += f[x];
-					x += i;
+			int x = 0, pw = __bit_floor(unsigned(n));;
+			for (int len = pw; len > 0; len >>= 1) {
+				if (x + len <= n && sum + f[x + len - 1] < k) {
+					sum += f[x + len - 1];
+					x += len;
 				}
 			}
-			if (sum + f[x] < k) {
-				x++;
-			}
+			assert(x >= 0 && x <= n);
 			return x;
 		}
 	};
 	${0}
 
-snippet fenwick2 "Range_Update & Point_Query, O(log(n))"
+snippet fenwick2 "Range Update & Point Query, O(log(n))"
 	template <typename T>
-	struct FenwickTree2 { 
+	struct FenwickTree { 
 		int n;
 		vector<T> f;
 		
-		FenwickTree2() {}
-		FenwickTree2(int _n) : n(_n) {
+		FenwickTree() {}
+		FenwickTree(int _n) : n(_n) {
 			f.assign(n, T{});
 		}
-		FenwickTree2(const vector<T> &v) {
+		FenwickTree(const vector<T> &v) {
 			n = v.size();
 			f.assign(n, T{});
 			for (int i = 0; i < n; i++) {
@@ -531,42 +681,42 @@ snippet fenwick2 "Range_Update & Point_Query, O(log(n))"
 			}
 		}
 
-		void modify(int x, T v) {
+		void modify(int x, const T &v) {
 			for (int i = x; i < n; i = i | (i + 1)) {
 				f[i] += v;
 			}
 		}
-		void modify(int l, int r, T v) {
+		void modify(int l, int r, const T &v) {
 			assert(l >= 0 && l <= r && r < n);
 			modify(l, v);
 			modify(r + 1, -v);
 		}
 		T get(int x) {
 			assert(x >= 0 && x < n);
-			T ans = 0;
+			T res = 0;
 			for (int i = x; i >= 0; i = (i & (i + 1)) - 1) {
-				ans += f[i];
+				res += f[i];
 			}
-			return ans;
+			return res;
 		}
 	};
 	${0}
 
-snippet fenwick3 "Range_Update & Range_Query, O(log(n))" 
+snippet fenwick3 "Range Update & Range Query, O(log(n))"
 	template <typename T>
 	struct FenwickTree {
 		int n;
-		vector<T> f1, f2;
+		vector<T> f_mul, f_add;
 		
 		FenwickTree() {}
 		FenwickTree(int _n) : n(_n) {
-			f1.assign(n, T{});
-			f2.assign(n, T{});
+			f_mul.assign(n, T{});
+			f_add.assign(n, T{});
 		}
 		FenwickTree(const vector<T> &v) {
 			n = v.size();
-			f1.assign(n, T{});
-			f2.assign(n, T{});
+			f_mul.assign(n, T{});
+			f_add.assign(n, T{});
 			for (int i = 0; i < n; i++) {
 				modify(i, i, v[i]);
 			}
@@ -574,11 +724,11 @@ snippet fenwick3 "Range_Update & Range_Query, O(log(n))"
 
 		void add(int x, T mul, T add) {
 			for (int i = x; i < n; i = i | (i + 1)) {
-				f1[i] += mul;
-				f2[i] += add;
+				f_mul[i] += mul;
+				f_add[i] += add;
 			}
 		}
-		void modify(int l, int r, T v) {
+		void modify(int l, int r, const T &v) {
 			assert(l >= 0 && l <= r && r < n);
 			add(l, v, -v * (l - 1));
 			add(r, -v, v * r);
@@ -586,8 +736,8 @@ snippet fenwick3 "Range_Update & Range_Query, O(log(n))"
 		T get(int x) {
 			T mul{}, add{};
 			for (int i = x; i >= 0; i = (i & (i + 1)) - 1) {
-				mul += f1[i];
-				add += f2[i];
+				mul += f_mul[i];
+				add += f_add[i];
 			}
 			return mul * x + add;
 		}
@@ -598,11 +748,11 @@ snippet fenwick3 "Range_Update & Range_Query, O(log(n))"
 	};
 	${0}
 
-snippet segtree "Segment Tree, update & query -> O(log(n))"
+snippet segtree "Segment Tree, build -> O(n), update & query -> O(log(n))"
 	struct SegmentTree {
 		struct Node {
 			int64_t sum = 0;
-			int mn = 2e9, cnt = 1;
+			int mn = 2e9, cnt = 0;
 
 			template <typename M>
 			void init(const M &v) {
@@ -630,7 +780,7 @@ snippet segtree "Segment Tree, update & query -> O(log(n))"
 			if (l == r) {
 				return;
 			}
-			int m = (l + r) >> 1;
+			int m = (l + r) / 2;
 			build(2 * x, l, m);
 			build(2 * x + 1, m + 1, r);
 			pull(x);
@@ -642,7 +792,7 @@ snippet segtree "Segment Tree, update & query -> O(log(n))"
 				tree[x].init(v[l]);
 				return;
 			}
-			int m = (l + r) >> 1;
+			int m = (l + r) / 2;
 			build(2 * x, l, m, v);
 			build(2 * x + 1, m + 1, r, v);
 			pull(x);
@@ -654,7 +804,7 @@ snippet segtree "Segment Tree, update & query -> O(log(n))"
 				tree[x].init(v);
 				return;
 			}
-			int m = (l + r) >> 1;
+			int m = (l + r) / 2;
 			if (p <= m) {
 				modify(2 * x, l, m, p, v);
 			}
@@ -665,16 +815,13 @@ snippet segtree "Segment Tree, update & query -> O(log(n))"
 		}
 		
 		Node get(int x, int l, int r, int ll, int rr) {
-			if (ll <= l && r <= rr) {
+			if (l > rr || r < ll) {
+				return Node();
+			}
+			if (l >= ll && r <= rr) {
 				return tree[x];
 			}
-			int m = (l + r) >> 1;
-			if (m >= rr) {
-				return get(2 * x, l, m, ll, rr);
-			}
-			else if (m < ll) {
-				return get(2 * x + 1, m + 1, r, ll, rr);
-			}
+			int m = (l + r) / 2;
 			return merge(get(2 * x, l, m, ll, rr), get(2 * x + 1, m + 1, r, ll, rr));
 		}
 
@@ -682,7 +829,7 @@ snippet segtree "Segment Tree, update & query -> O(log(n))"
 			if (l == r) {
 				return l;
 			}
-			int m = (l + r) >> 1;
+			int m = (l + r) / 2;
 			if (f(tree[2 * x])) {
 				return find_first_knowingly(2 * x, l, m, f);
 			} 
@@ -690,18 +837,18 @@ snippet segtree "Segment Tree, update & query -> O(log(n))"
 		}
 
 		int find_first(int x, int l, int r, int ll, int rr, const function<bool(const Node&)> &f) {
-			if (ll <= l && r <= rr) {
+			if (l > rr || r < ll) {
+				return -1;
+			}
+			if (l >= ll && r <= rr) {
 				if (!f(tree[x])) {
 					return -1;
 				}
 				return find_first_knowingly(x, l, r, f);
 			}
-			int m = (l + r) >> 1;
-			int res = -1;
-			if (m >= ll) {
-				res = find_first(2 * x, l, m, ll, rr, f);
-			}
-			if (m < rr && res == -1) {
+			int m = (l + r) / 2;
+			int res = find_first(2 * x, l, m, ll, rr, f);
+			if (res == -1) {
 				res = find_first(2 * x + 1, m + 1, r, ll, rr, f);
 			}
 			return res;
@@ -711,7 +858,7 @@ snippet segtree "Segment Tree, update & query -> O(log(n))"
 			if (l == r) {
 				return l;
 			}
-			int m = (l + r) >> 1;
+			int m = (l + r) / 2;
 			if (f(tree[2 * x + 1])) {
 				return find_last_knowingly(2 * x + 1, m + 1, r, f);
 			} 
@@ -719,18 +866,18 @@ snippet segtree "Segment Tree, update & query -> O(log(n))"
 		}
 
 		int find_last(int x, int l, int r, int ll, int rr, const function<bool(const Node&)> &f) {
-			if (ll <= l && r <= rr) {
+			if (l > rr || r < ll) {
+				return -1;
+			}
+			if (l >= ll && r <= rr) {
 				if (!f(tree[x])) {
 					return -1;
 				}
 				return find_last_knowingly(x, l, r, f);
 			}
-			int m = (l + r) >> 1;
-			int res = -1;
-			if (m < rr) {
-				res = find_last(2 * x + 1, m + 1, r, ll, rr, f);
-			}
-			if (m >= ll && res == -1) {
+			int m = (l + r) / 2;
+			int res = find_last(2 * x + 1, m + 1, r, ll, rr, f);
+			if (res == -1) {
 				res = find_last(2 * x, l, m, ll, rr, f);
 			}
 			return res;
@@ -750,25 +897,24 @@ snippet segtree "Segment Tree, update & query -> O(log(n))"
 			build(1, 0, n - 1, v);
 		}
 
-		Node get(int ll, int rr) {
-			assert(ll >= 0 && ll <= rr && rr < n);
-			return get(1, 0, n - 1, ll, rr);
-		}
-
-		Node get(int p) {
-			assert(0 <= p && p < n);
-			return get(1, 0, n - 1, p, p);
-		}
-
 		template <typename M>
 		void modify(int p, const M &v) {
 			assert(p >= 0 && p < n);
 			modify(1, 0, n - 1, p, v);
 		}
 
-		// find_first and find_last call all FALSE elements
-		// to the left (right) of the sought position exactly once
-		// auto f = [&](const auto &info) { return info.mn == 0; }
+		Node get(int ll, int rr) {
+			assert(ll >= 0 && ll <= rr && rr < n);
+			return get(1, 0, n - 1, ll, rr);
+		}
+
+		Node get(int p) {
+			assert(p >= 0 && p < n);
+			return get(1, 0, n - 1, p, p);
+		}
+
+		// find_first and find_last find first/last element satisfy f
+    	// auto f = [&](const auto &node) { return node.mn <= 0; };
 
 		int find_first(int ll, int rr, const function<bool(const Node&)> &f) {
 			assert(ll >= 0 && ll <= rr && rr < n);
@@ -782,42 +928,44 @@ snippet segtree "Segment Tree, update & query -> O(log(n))"
 	};
 	${0}
 
-snippet segtreelazy "Segment Tree with Lazy Propagation, update & query -> O(log(n))"
-	struct LazySegmentTree {
+snippet segtreelazy "Segment Tree with Lazy Propagation, build -> O(n), update & query -> O(log(n))"
+	struct SegmentTreeLazy {
 		struct Node {
-			int64_t mn = 2e9, cnt = 0;
+			int64_t sum = 0, mn = 4e18, cnt = 0;
 			int64_t add = 0;
 
 			template <typename M>
 			void init(const M &v) {
-				mn = v;
+				sum = mn = v;
 				cnt = 1;
+				add = 0;
 			}
 			template <typename M>
-			void apply(int l, int r, const M &v) {
+			void apply([[maybe_unused]] int l, [[maybe_unused]] int r, const M &v) {
+				sum += (int64_t)v * (r - l + 1);
 				mn += v;
 				add += v;
-				l = r, r = l;
 			}
 		};
 
 		int n;
 		vector<Node> tree;
 
-		Node unite(const Node &a, const Node &b) const {
+		Node merge(const Node &a, const Node &b) const {
 			Node res;
+			res.sum = a.sum + b.sum;
 			res.mn = min(a.mn, b.mn);
 			res.cnt = (res.mn == a.mn ? a.cnt : 0) + (res.mn == b.mn ? b.cnt : 0);
 			return res;
 		}
 
 		inline void pull(int x) {
-			tree[x] = unite(tree[2 * x], tree[2 * x + 1]);
+			tree[x] = merge(tree[2 * x], tree[2 * x + 1]);
 		}
 
-		inline void push(int l, int r, int x) {
-			int m = (l + r) / 2;
-			if (tree[x].add != 0) {
+		inline void push(int x, int l, int r) {
+			if (tree[x].add != 0 && l != r) {
+				int m = (l + r) / 2;
 				tree[2 * x].apply(l, m, tree[x].add);
 				tree[2 * x + 1].apply(m + 1, r, tree[x].add);
 				tree[x].add = 0;
@@ -846,77 +994,62 @@ snippet segtreelazy "Segment Tree with Lazy Propagation, update & query -> O(log
 			pull(x);
 		}
 
-		Node get(int x, int l, int r, int ll, int rr) {
-			if (l >= ll && r <= rr) {
-				return tree[x];
-			}
-			push(l, r, x);
-			int m = (l + r) / 2;
-			Node res{};
-			if (m >= rr) {
-				res = get(2 * x, l, m, ll, rr);
-			} 
-			else if (m < ll) {
-				res = get(2 * x + 1, m + 1, r, ll, rr);
-			} 
-			else {
-				res = unite(get(2 * x, l, m, ll, rr), get(2 * x + 1, m + 1, r, ll, rr));
-			}
-			pull(x);
-			return res;
-		}
-
 		template <typename M>
 		void modify(int x, int l, int r, int ll, int rr, const M &v) {
+			if (l > rr || r < ll) {
+				return;
+			}
 			if (l >= ll && r <= rr) {
 				tree[x].apply(l, r, v);
 				return;
 			}
-			push(l, r, x);
+			push(x, l, r);
 			int m = (l + r) / 2;
-			if (m >= ll) {
-				modify(2 * x, l, m, ll, rr, v);
-			}
-			if (m < rr) {
-				modify(2 * x + 1, m + 1, r, ll, rr, v);
-			}
+			modify(2 * x, l, m, ll, rr, v);
+			modify(2 * x + 1, m + 1, r, ll, rr, v);
 			pull(x);
+		}
+
+		Node get(int x, int l, int r, int ll, int rr) {
+			if (l > rr || r < ll) {
+				return Node();
+			}
+			if (l >= ll && r <= rr) {
+				return tree[x];
+			}
+			push(x, l, r);
+			int m = (l + r) / 2;
+			return merge(get(2 * x, l, m, ll, rr), get(2 * x + 1, m + 1, r, ll, rr));
 		}
 
 		int find_first_knowingly(int x, int l, int r, const function<bool(const Node&)> &f) {
 			if (l == r) {
 				return l;
 			}
-			push(l, r, x);
+			push(x, l, r);
 			int m = (l + r) / 2;
-			int res;
 			if (f(tree[2 * x])) {
-				res = find_first_knowingly(2 * x, l, m, f);
+				return find_first_knowingly(2 * x, l, m, f);
 			} 
-			else {
-				res = find_first_knowingly(2 * x + 1, m + 1, r, f);
-			}
-			pull(x);
-			return res;
+			return find_first_knowingly(2 * x + 1, m + 1, r, f);
 		}
 
 		int find_first(int x, int l, int r, int ll, int rr, const function<bool(const Node&)> &f) {
-			if (ll <= l && r <= rr) {
+			if (l > rr || r < ll) {
+				return -1;
+			}
+			if (l >= ll && r <= rr) {
 				if (!f(tree[x])) {
 					return -1;
 				}
 				return find_first_knowingly(x, l, r, f);
 			}
-			push(l, r, x);
+			push(x, l, r);
 			int m = (l + r) / 2;
-			int res = -1;
-			if (m >= ll) {
-				res = find_first(2 * x, l, m, ll, rr, f);
-			}
-			if (m < rr && res == -1) {
+			int res = find_first(2 * x, l, m, ll, rr, f);
+			if (res == -1) {
 				res = find_first(2 * x + 1, m + 1, r, ll, rr, f);
 			}
-			pull(x);
 			return res;
 		}
 
@@ -924,81 +1057,218 @@ snippet segtreelazy "Segment Tree with Lazy Propagation, update & query -> O(log
 			if (l == r) {
 				return l;
 			}
-			push(l, r, x);
+			push(x, l, r);
 			int m = (l + r) / 2;
-			int res;
 			if (f(tree[2 * x + 1])) {
-				res = find_last_knowingly(2 * x + 1, m + 1, r, f);
+				return find_last_knowingly(2 * x + 1, m + 1, r, f);
 			} 
-			else {
-				res = find_last_knowingly(2 * x, l, m, f);
-			}
-			pull(x);
-			return res;
+			return find_last_knowingly(2 * x, l, m, f);
 		}
 
 		int find_last(int x, int l, int r, int ll, int rr, const function<bool(const Node&)> &f) {
-			if (ll <= l && r <= rr) {
+			if (l > rr || r < ll) {
+				return -1;
+			}
+			if (l >= ll && r <= rr) {
 				if (!f(tree[x])) {
 					return -1;
 				}
 				return find_last_knowingly(x, l, r, f);
 			}
-			push(l, r, x);
+			push(x, l, r);
 			int m = (l + r) / 2;
-			int res = -1;
-			if (m < rr) {
-				res = find_last(2 * x + 1, m + 1, r, ll, rr, f);
-			}
-			if (m >= ll && res == -1) {
+			int res = find_last(2 * x + 1, m + 1, r, ll, rr, f);
+			if (res == -1) {
 				res = find_last(2 * x, l, m, ll, rr, f);
 			}
-			pull(x);
 			return res;
 		}
 
-		LazySegmentTree(int _n) : n(_n) {
+		SegmentTreeLazy(int _n) : n(_n) {
 			assert(n > 0);
 			tree.resize(4 * n);
 			build(1, 0, n - 1);
 		}
 
 		template <typename M>
-		LazySegmentTree(const vector<M> &v) {
+		SegmentTreeLazy(const vector<M> &v) {
 			n = v.size();
 			assert(n > 0);
 			tree.resize(4 * n);
 			build(1, 0, n - 1, v);
 		}
 
+		template <typename M>
+		void modify(int ll, int rr, const M &v) {
+			assert(ll >= 0 && ll <= rr && rr < n);
+			modify(1, 0, n - 1, ll, rr, v);
+		}
+
 		Node get(int ll, int rr) {
-			assert(0 <= ll && ll <= rr && rr <= n - 1);
+			assert(ll >= 0 && ll <= rr && rr < n);
 			return get(1, 0, n - 1, ll, rr);
 		}
 
 		Node get(int p) {
-			assert(0 <= p && p <= n - 1);
+			assert(p >= 0 && p < n);
 			return get(1, 0, n - 1, p, p);
 		}
 
-		template <typename M>
-		void modify(int ll, int rr, const M &v) {
-			assert(0 <= ll && ll <= rr && rr <= n - 1);
-			modify(1, 0, n - 1, ll, rr, v);
-		}
-
-		// find_first and find_last call all FALSE elements
-		// to the left (right) of the sought position exactly once
-		// auto f = [&](const auto &info) { return info.mn == 0; };
+		// find_first and find_last find first/last element satisfy f
+		// auto f = [&](const auto &node) { return node.mn <= 0; };
 
 		int find_first(int ll, int rr, const function<bool(const Node&)> &f) {
-			assert(0 <= ll && ll <= rr && rr <= n - 1);
+			assert(ll >= 0 && ll <= rr && rr < n);
 			return find_first(1, 0, n - 1, ll, rr, f);
 		}
 
 		int find_last(int ll, int rr, const function<bool(const Node&)> &f) {
-			assert(0 <= ll && ll <= rr && rr <= n - 1);
+			assert(ll >= 0 && ll <= rr && rr < n);
 			return find_last(1, 0, n - 1, ll, rr, f);
+		}
+	};
+	${0}
+
+snippet triestr "Trie on Strings, O(n)"
+	struct Trie {
+		int sz;
+		vector<int> cnt_prefix, cnt_word;
+		vector<array<int, 26>> nxt;
+
+		Trie(int n) : sz(1) {
+			cnt_prefix.assign(n, 0);
+			cnt_word.assign(n, 0);
+			nxt.assign(n, array<int, 26>());
+		}
+
+		void insert(const string &s) {
+			int v = 0;
+			for (auto ch : s) {
+				int ind = ch - 'a';
+				if (!nxt[v][ind]) {
+					nxt[v][ind] = sz++;
+				}
+				v = nxt[v][ind];
+				cnt_prefix[v]++;
+			}
+			cnt_word[v]++;
+		}
+
+		void erase(const string &s) {
+			int v = 0;
+			for (auto ch : s) {
+				int ind = ch - 'a';
+				v = nxt[v][ind];
+				cnt_prefix[v]--;
+				assert(cnt_prefix[v] >= 0);
+			}
+			cnt_word[v]--;
+			assert(cnt_word[v] >= 0);
+		}
+
+		int count_prefix(const string &s) {
+			int v = 0;
+			for (auto ch : s) {
+				int ind = ch - 'a';
+				if (!nxt[v][ind]) {
+					return 0;
+				}
+				v = nxt[v][ind];
+			}
+			return cnt_prefix[v];
+		}
+
+		int count_word(const string &s) {
+			int v = 0;
+			for (auto ch : s) {
+				int ind = ch - 'a';
+				if (!nxt[v][ind]) {
+					return 0;
+				}
+				v = nxt[v][ind];
+			}
+			return cnt_word[v];
+		}
+	};
+	${0}
+
+snippet triebit "Trie on Bits, O(n)"
+	template <typename T>
+	struct Trie {
+		int sz;
+		vector<int> cnt_prefix, cnt_word;
+		vector<array<int, 2>> nxt;
+		const int B = numeric_limits<T>::digits - 1;
+
+		Trie(int n) : sz(1) {
+			cnt_prefix.assign(n, 0);
+			cnt_word.assign(n, 0);
+			nxt.assign(n, array<int, 2>());
+		}
+
+		void insert(const T &x) {
+			int v = 0;
+			for (int i = B; i >= 0; i--) {
+				int bit = x >> i & 1;
+				if (!nxt[v][bit]) {
+					nxt[v][bit] = sz++;
+				}
+				v = nxt[v][bit];
+				cnt_prefix[v]++;
+			}
+			cnt_word[v]++;
+		}
+
+		void erase(const T &x) {
+			int v = 0;
+			for (int i = B; i >= 0; i--) {
+				int bit = x >> i & 1;
+				v = nxt[v][bit];
+				cnt_prefix[v]--;
+				assert(cnt_prefix[v] >= 0);
+			}
+			cnt_word[v]--;
+			assert(cnt_word[v] >= 0);
+		}
+
+		int count_prefix(const T &x) {
+			int v = 0;
+			for (int i = B; i >= 0; i--) {
+				int bit = x >> i & 1;
+				if (!nxt[v][bit]) {
+					return 0;
+				}
+				v = nxt[v][bit];
+			}
+			return cnt_prefix[v];
+		}
+
+		int count_word(const T &x) {
+			int v = 0;
+			for (int i = B; i >= 0; i--) {
+				int bit = x >> i & 1;
+				if (!nxt[v][bit]) {
+					return 0;
+				}
+				v = nxt[v][bit];
+			}
+			return cnt_word[v];
+		}
+
+		T max_xor(const T &x) {
+			T res{};
+			int v = 0;
+			for (int i = B; i >= 0; i--) {
+				int bit = x >> i & 1;
+				if (cnt_prefix[nxt[v][bit ^ 1]]) {
+					v = nxt[v][bit ^ 1];
+					res += T(1) << i;
+				}
+				else {
+					v = nxt[v][bit];
+				}
+			}
+			return res;
 		}
 	};
 	${0}
@@ -1197,9 +1467,338 @@ snippet ordered_set "Ordered Set & Ordered Map"
 	using ordered_map = tree<T, R, less<T>, rb_tree_tag, tree_order_statistics_node_update>;
 	${0}
 
+snippet treap "Treap, Max Heap" 
+	mt19937 rng(chrono::steady_clock::now().time_since_epoch().count());
+
+	template <typename T>
+	struct Treap {
+		struct Node {
+			T key;
+			int prior, sz, left, right, par;
+
+			Node (T _key) : key(_key), prior(rng()), sz(1), left(-1), right(-1), par(-1) {}
+			Node (T _key, int _prior) : key(_key), prior(_prior), sz(1), left(-1), right(-1), par(-1) {}
+		};
+
+		int root;
+		vector<Node> tree;
+
+		Treap() : root(-1) {}
+		Treap(int n) : root(-1) {
+			tree.reserve(n);
+		}
+		// Construction with sorted keys, O(n)
+		Treap(vector<T> &keys) {
+			int n = keys.size();
+			tree.reserve(n);
+			root = build(keys, 0, n - 1);
+		}
+		// Construction with sorted keys & priors, O(n)
+		Treap(vector<T> &keys, vector<int> &priors) {
+			assert(keys.size() == priors.size());
+			int n = keys.size();
+			tree.reserve(n);
+			root = build(keys, priors);
+			pull_size(root);
+		}
+
+		int build(vector<T> &keys, int lo, int hi) {
+			if (lo > hi) {
+				return -1;
+			}
+			int mid = lo + (hi - lo) / 2;
+			int x = new_node(keys[mid]);
+			tree[x].left = build(keys, lo, mid - 1);
+			tree[x].right = build(keys, mid + 1, hi);
+			heapify(x);
+			pull(x);
+			return x;
+		}
+
+		void heapify(int x) {
+			if (x == -1) {
+				return;
+			}
+			int mx = x;
+			if (tree[x].left != -1 && tree[tree[x].left].prior > tree[mx].prior) {
+				mx = tree[x].left;
+			}
+			if (tree[x].right != -1 && tree[tree[x].right].prior > tree[mx].prior) {
+				mx = tree[x].right;
+			}
+			if (mx != x) {
+				swap(tree[x].prior, tree[mx].prior);
+				heapify(mx);
+			}
+		}
+
+		int build(vector<T> &keys, vector<int> &priors) {
+			int n = keys.size();
+			for (int i = 0; i < n; i++) {
+				tree.push_back(Node(keys[i], priors[i]));
+			}
+			vector<int> st;
+			for (int i = 0; i < n; i++) {
+				while (!st.empty() && tree[st.back()].prior < tree[i].prior) {
+					st.pop_back();
+				}
+				if (!st.empty() && (tree[i].par == -1 || tree[tree[i].par].prior > tree[st.back()].prior)) {
+					tree[i].par = st.back();
+				}
+				st.push_back(i);
+			}
+			st.clear();
+			for (int i = n - 1; i >= 0; i--) {
+				while (!st.empty() && tree[st.back()].prior < tree[i].prior) {
+					st.pop_back();
+				}
+				if (!st.empty() && (tree[i].par == -1 || tree[tree[i].par].prior > tree[st.back()].prior)) {
+					tree[i].par = st.back();
+				}
+				st.push_back(i);
+			}
+			for (int i = 0; i < n; i++) {
+				if (tree[i].par != -1) {
+					if (tree[tree[i].par].key < tree[i].key) {
+						tree[tree[i].par].right = i;
+					} 
+					else {
+						tree[tree[i].par].left = i;
+					}
+				}
+			}
+			return n ? min_element(priors.begin(), priors.end()) - priors.begin() : -1;
+		}
+
+		void pull_size(int x) {
+			if (x == -1) {
+				return;
+			}
+			if (tree[x].left != -1) {
+				pull_size(tree[x].left);
+			}
+			if (tree[x].right != -1) {
+				pull_size(tree[x].right);
+			}
+			pull(x);
+		}
+
+		inline void pull(int x) {
+			tree[x].sz = size(tree[x].left) + size(tree[x].right) + 1;
+		}
+
+		int size(int x) const {
+			return (x == -1 ? 0 : tree[x].sz);
+		}
+
+		int new_node(T key, int prior = rng()) {
+			int id = int(tree.size());
+			tree.push_back(Node(key, prior));
+			return id;
+		}
+
+		inline void add_right(int x, int right) {
+			tree[x].right = right;
+			if (right != -1) {
+				tree[right].par = x;
+			}
+		}
+
+		inline void add_left(int x, int left) {
+			tree[x].left = left;
+			if (left != -1) {
+				tree[left].par = x;
+			}
+		}
+
+		pair<int, int> split_by_key(int x, T key) {
+			if (x == -1) {
+				return {x, x};
+			}
+			if (tree[x].key <= key) {
+				auto cur = split_by_key(tree[x].right, key);
+				add_right(x, cur.first);
+				pull(x);
+				return {x, cur.second};
+			} 
+			else {
+				auto cur = split_by_key(tree[x].left, key);
+				add_left(x, cur.second);
+				pull(x);
+				return {cur.first, x};
+			}
+		}
+
+		pair<int, int> split_by_size(int x, int n) {
+			if (x == -1) {
+				return {x, x};
+			}
+			if (size(tree[x].left) + 1 <= n) {
+				auto cur = split_by_size(tree[x].right, n - size(tree[x].left) - 1);
+				add_right(x, cur.first);
+				pull(x);
+				return {x, cur.second};
+			} 
+			else {
+				auto cur = split_by_size(tree[x].left, n);
+				add_left(x, cur.second);
+				pull(x);
+				return {cur.first, x};
+			}
+		}
+
+		int merge(int left, int right) {
+			if (left == -1 || right == -1) {
+				return left != -1 ? left : right;
+			}
+			if (tree[left].prior > tree[right].prior) {
+				add_right(left, merge(tree[left].right, right));
+				pull(left);
+				return left;
+			} 
+			else {
+				add_left(right, merge(left, tree[right].left));
+				pull(right);
+				return right;
+			}
+		}
+	 
+		int insert(int x, T key, int id) {
+			if (x == -1) {
+				return id;
+			}
+			if (tree[id].prior < tree[x].prior) {
+				if (key < tree[x].key) {
+					add_left(x, insert(tree[x].left, key, id));
+				}
+				else {
+					add_right(x, insert(tree[x].right, key, id));
+				}
+				pull(x);
+				return x;
+			} 
+			else {
+				auto [left, right] = split_by_key(x, key);
+				add_left(id, left);
+				add_right(id, right);
+				pull(id);
+				return id;
+			}
+		}
+	 
+		int erase(int x, T key) {
+			if (x == -1) {
+				return -1;
+			}
+			if (tree[x].key == key) {
+				return merge(tree[x].left, tree[x].right);
+			}
+			if (key < tree[x].key) {
+				add_left(x, erase(tree[x].left, key));
+			}
+			else {
+				add_right(x, erase(tree[x].right, key));
+			}
+			pull(x);
+			return x;
+		}
+
+		T at(int x, int pos) {
+			if (size(tree[x].left) > pos) {
+				return at(tree[x].left, pos);
+			}
+			pos -= size(tree[x].left);
+			if (!pos) {
+				return tree[x].key;
+			}
+			return at(tree[x].right, pos - 1);
+		}
+
+		int find(int x, T key) {
+			if (x == -1) {
+				return 0;
+			}
+			if (tree[x].key >= key) {
+				return find(tree[x].left, key);
+			}
+			else {
+				return size(tree[x].left) + 1 + find(tree[x].right, key);
+			}
+		}
+
+		bool contains(int x, T key) {
+			if (x == -1) {
+				return false;
+			}
+			if (tree[x].key == key) {
+				return true;
+			}
+			if (tree[x].key < key) {
+				return contains(tree[x].right, key);
+			}
+			return contains(tree[x].left, key);
+		}
+
+		int unite(int l, int r) {
+			if (l == -1 || r == -1)  {
+				return l != -1 ? l : r;
+			}
+			if (tree[l].prior < tree[r].prior)  {
+				swap(l, r);
+			}
+			auto [lt, rt] = split_by_key(r, tree[l].key);
+			add_left(l, unite(tree[l].left, lt));
+			add_right(l, unite(tree[l].right, rt));
+			return l;
+		}
+	 
+		void insert(T key) {
+			int id = new_node(key);
+			root = insert(root, key, id);
+		}
+
+		void insert(T key, int prior) {
+			int id = new_node(key, prior);
+			root = insert(root, key, id);
+		}
+	 
+		void erase(T key) {
+			root = erase(root, key);
+		}
+	 
+		int size() const {
+			return size(root);
+		}
+
+		T at(int pos) {
+			assert(pos >= 0 && pos < size());
+			return at(root, pos);
+		}
+
+		// Return number of elements smaller than key
+		int find(T key) {
+			return find(root, key);
+		}
+
+		bool contains(T key) {
+			return contains(root, key);
+		}
+
+		// Unite 2 Treaps, O(m*log(n / m))
+		void unite(Treap<T> &t) {
+			int n = size();
+			for (int i = 0; i < t.size(); i++) {
+				tree.push_back(t.tree[i]);
+			}
+			root = unite(root, n);
+		}
+	};
+	${0}
+
 snippet dfs "Depth First Search, O(n + m)" 
     vector<bool> vis(n);
     vector<int> in(n), out(n), order;
+    order.reserve(n);
     int timer = 0;
     auto dfs = [&](auto &&self, int v) -> void {
         vis[v] = true;
@@ -1214,22 +1813,19 @@ snippet dfs "Depth First Search, O(n + m)"
     };
 
 snippet bfs "Breadth First Search, O(n + m)" 
-    vector<bool> vis(n);
-    vector<int> dist(n), par(n);
+    constexpr int INF = 1e9;
+    vector<int> dist(n, INF), par(n, -1);
     auto bfs = [&](int s) -> void {
         queue<int> q;
         q.push(s);
-        vis[s] = true;
         dist[s] = 0;
-        par[s] = -1;
         while (!q.empty()) {
             int v = q.front();
             q.pop();
 
             for (auto u : adj[v]) {
-                if (!vis[u]) {
+                if (dist[v] + 1 < dist[u]) {
                     q.push(u);
-                    vis[u] = true;
                     dist[u] = dist[v] + 1;
                     par[u] = v;
                 }
@@ -1241,7 +1837,8 @@ snippet topsort "Topological Sorting, O(n + m)"
     // An order of vertices in DAG that every edge leads from 
     // the vertex with a smaller index to a vertex with a larger one.
     vector<bool> vis(n);
-    vector<int> ord;
+    vector<int> order;
+    order.reserve(n);
     auto dfs = [&](auto &&self, int v) -> void {
         vis[v] = true;
         for (auto u : adj[v]) {
@@ -1249,7 +1846,7 @@ snippet topsort "Topological Sorting, O(n + m)"
                 self(self, u);
             }
         }
-        ord.push_back(v);
+        order.push_back(v);
     };
     auto topological_sorting = [&]() -> void {
         for (int v = 0; v < n; v++) {
@@ -1257,7 +1854,191 @@ snippet topsort "Topological Sorting, O(n + m)"
                 dfs(dfs, v);
             }
         }
-        reverse(ord.begin(), ord.end());
+        reverse(order.begin(), order.end());
+    };
+
+snippet bipartite "Check an Undirected Graph is Bipartite, O(n + m)"
+    vector<int> color(n, -1);
+    vector<vector<int>> c(2);
+    auto is_bipartite = [&]() -> bool {
+        queue<int> q;
+        for (int i = 0; i < n; i++) {
+            if (color[i] == -1) {
+                color[i] = 0;
+                c[color[i]].push_back(i);
+                q.push(i); 
+                while (!q.empty()) {
+                    int v = q.front();
+                    q.pop();
+
+                    for (auto u : adj[v]) {
+                        if (color[u] == -1) {
+                            color[u] = color[v] ^ 1;
+                            c[color[u]].push_back(u);
+                            q.push(u);
+                        }
+                        else if (color[u] == color[v]) {
+                            return false;
+                        }
+                    }
+                }
+
+            }
+        }
+        return true;
+    };
+
+snippet ucycle "Find Cycle in Undirected Graph, O(n + m)" 
+    vector<bool> vis(n);
+    vector<int> par(n, -1), cycle;
+    int cycle_start, cycle_end;
+    auto dfs = [&](auto &&self, int v, int p) -> bool {
+        vis[v] = true;
+        for (auto u : adj[v]) {
+            if (u == p) {
+                continue; 
+            }
+            if (vis[u]) {
+                cycle_end = v;
+                cycle_start = u;
+                return true;
+            }
+            par[u] = v;
+            if (self(self, u, v)) {
+                return true;
+            }
+        }
+        return false;
+    };
+    auto find_cycle = [&]() -> bool {
+        cycle.clear();
+        cycle_start = -1;
+        for (int v = 0; v < n; v++) {
+            if (!vis[v] && dfs(dfs, v, -1)) {
+                break;
+            }
+        }
+        if (cycle_start == -1) {
+            return false;
+        } 
+
+        for (int v = cycle_end; v != cycle_start; v = par[v]) {
+            cycle.push_back(v);
+        }
+        cycle.push_back(cycle_start);
+        return true;
+    };
+
+snippet dcycle "Find Cycle in Directed Graph, O(n + m)" 
+    vector<int> color(n), par(n, -1), cycle;
+    int cycle_start, cycle_end;
+    auto dfs = [&](auto &&self, int v) -> bool {
+        color[v] = 1;
+        for (auto u : adj[v]) {
+            if (color[u] == 0) {
+                par[u] = v;
+                if (self(self, u)) {
+                    return true;
+                }
+            } 
+            else if (color[u] == 1) {
+                cycle_end = v;
+                cycle_start = u;
+                return true;
+            }
+        }
+        color[v] = 2;
+        return false;
+    };
+    auto find_cycle = [&]() -> bool {
+        cycle.clear();
+        cycle_start = -1;
+        for (int v = 0; v < n; v++) { 
+            if (color[v] == 0 && dfs(dfs, v)) {
+                break;
+            }
+        }
+        if (cycle_start == -1) {
+            return false;
+        }
+
+        for (int v = cycle_end; v != cycle_start; v = par[v]) {
+            cycle.push_back(v);
+        }
+        cycle.push_back(cycle_start);
+        reverse(cycle.begin(), cycle.end());
+        return true;
+    };
+
+snippet bridges "Find Articulation Bridges in Undirected Graph, O(n + m)" 
+    vector<bool> vis(n);
+    vector<array<int, 2>> bridges;
+    vector<int> tin(n), low(n);
+    int timer = 0;
+    auto dfs = [&](auto &&self, int v, int p) -> void {
+        vis[v] = true;
+        tin[v] = low[v] = timer++;
+        for (auto u : adj[v]) {
+            if (u == p) {
+                continue;
+            }
+            if (vis[u]) {
+                low[v] = min(low[v], tin[u]);
+            } 
+            else {
+                self(self, u, v);
+                low[v] = min(low[v], low[u]);
+                if (low[u] > tin[v]) {
+                    bridges.push_back({v, u});
+                }
+            }
+        }
+    };
+    auto find_bridges = [&]() -> void {
+        for (int v = 0; v < n; v++) {
+            if (!vis[v]) {
+                dfs(dfs, v, -1);
+            }
+        }
+    };
+
+snippet art_points "Find Articulation Points in Undirected Graph, O(n + m)" 
+    vector<bool> vis(n);
+    vector<int> tin(n), low(n), art_points;
+    int timer = 0;
+    auto dfs = [&](auto &&self, int v, int p) -> void {
+        vis[v] = true;
+        tin[v] = low[v] = timer++;
+        int children = 0;
+        for (auto u : adj[v]) {
+            if (u == p) {
+                continue;
+            }
+            if (vis[u]) {
+                low[v] = min(low[v], tin[u]);
+            } 
+            else {
+                self(self, u, v);
+                low[v] = min(low[v], low[u]);
+                if (low[u] >= tin[v] && p != -1) {
+                    art_points.push_back(v);
+                }
+                children++;
+            }
+        }
+        if (p == -1 && children > 1) {
+            art_points.push_back(v);
+        }
+    };
+    auto find_art_points = [&]() {
+        for (int v = 0; v < n; v++) {
+            if (!vis[v]) {
+                dfs(dfs, v, -1);
+            }
+        }
+        // Some points may be added several times
+        sort(art_points.begin(), art_points.end());
+        art_points.erase(unique(art_points.begin(), art_points.end()), art_points.end());
     };
 
 snippet scc "Strong Connected Components" 
@@ -1321,159 +2102,6 @@ snippet scc "Strong Connected Components"
 		}
 	}
 	${0}
-
-snippet dcycle "Find Cycle in Directed Graph, O(n + m)" 
-    vector<int> color(n), par(n, -1), cycle;
-    int cycle_start, cycle_end;
-    auto dfs = [&](auto &&self, int v) -> bool {
-        color[v] = 1;
-        for (auto u : adj[v]) {
-            if (color[u] == 0) {
-                par[u] = v;
-                if (self(self, u)) {
-                    return true;
-                }
-            } 
-            else if (color[u] == 1) {
-                cycle_end = v;
-                cycle_start = u;
-                return true;
-            }
-        }
-        color[v] = 2;
-        return false;
-    };
-    auto find_cycle = [&]() -> bool {
-        cycle.clear();
-        cycle_start = -1;
-        for (int v = 0; v < n; v++) { 
-            if (color[v] == 0 && dfs(dfs, v)) {
-                break;
-            }
-        }
-        if (cycle_start == -1) {
-            return false;
-        }
-
-        for (int v = cycle_end; v != cycle_start; v = par[v]) {
-            cycle.push_back(v);
-        }
-        cycle.push_back(cycle_start);
-        reverse(cycle.begin(), cycle.end());
-        return true;
-    };
-
-snippet ucycle "Find Cycle in Undirected Graph, O(n + m)" 
-    vector<bool> vis(n);
-    vector<int> par(n, -1), cycle;
-    int cycle_start, cycle_end;
-    auto dfs = [&](auto &&self, int v, int p) -> bool {
-        vis[v] = true;
-        for (auto u : adj[v]) {
-            if (u == p) {
-                continue; 
-            }
-            if (vis[u]) {
-                cycle_end = v;
-                cycle_start = u;
-                return true;
-            }
-            par[u] = v;
-            if (self(self, u, par[u])) {
-                return true;
-            }
-        }
-        return false;
-    };
-    auto find_cycle = [&]() -> bool {
-        cycle.clear();
-        cycle_start = -1;
-        for (int v = 0; v < n; v++) {
-            if (!vis[v] && dfs(dfs, v, par[v])) {
-                break;
-            }
-        }
-        if (cycle_start == -1) {
-            return false;
-        } 
-
-        for (int v = cycle_end; v != cycle_start; v = par[v]) {
-            cycle.push_back(v);
-        }
-        cycle.push_back(cycle_start);
-        return true;
-    };
-
-snippet art_points "Find Articulation Points in Undirected Graph, O(n + m)" 
-    vector<bool> vis(n);
-    vector<int> tin(n), low(n), art_points;
-    int timer = 0;
-    auto dfs = [&](auto &&self, int v, int p) -> void {
-        vis[v] = true;
-        tin[v] = low[v] = timer++;
-        int children = 0;
-        for (auto u : adj[v]) {
-            if (u == p) {
-                continue;
-            }
-            if (vis[u]) {
-                low[v] = min(low[v], tin[u]);
-            } 
-            else {
-                self(self, u, v);
-                low[v] = min(low[v], low[u]);
-                if (low[u] >= tin[v] && p != -1) {
-                    art_points.push_back(v);
-                }
-                children++;
-            }
-        }
-        if (p == -1 && children > 1) {
-            art_points.push_back(v);
-        }
-    };
-    auto find_art_points = [&]() {
-        for (int v = 0; v < n; v++) {
-            if (!vis[v]) {
-                dfs(dfs, v, -1);
-            }
-        }
-        // Some points may be added several times
-        sort(art_points.begin(), art_points.end());
-        art_points.erase(unique(art_points.begin(), art_points.end()), art_points.end());
-    };
-
-snippet bridges "Find Articulation Bridges in Undirected Graph, O(n + m)" 
-    vector<bool> vis(n);
-    vector<array<int, 2>> bridges;
-    vector<int> tin(n), low(n);
-    int timer = 0;
-    auto dfs = [&](auto &&self, int v, int p) -> void {
-        vis[v] = true;
-        tin[v] = low[v] = timer++;
-        for (auto u : adj[v]) {
-            if (u == p) {
-                continue;
-            }
-            if (vis[u]) {
-                low[v] = min(low[v], tin[u]);
-            } 
-            else {
-                self(self, u, v);
-                low[v] = min(low[v], low[u]);
-                if (low[u] > tin[v]) {
-                    bridges.push_back({v, u});
-                }
-            }
-        }
-    };
-    auto find_bridges = [&]() -> void {
-        for (int v = 0; v < n; v++) {
-            if (!vis[v]) {
-                dfs(dfs, v, -1);
-            }
-        }
-    };
 
 snippet centroids "Find Centroids of a tree, O(n + m)" 
     // A node such that when the tree is rooted at it, no other nodes have a subtree of size greater than n/2
@@ -1539,12 +2167,12 @@ snippet floyd "Find All Shortest Path, O(n^3)"
     // if graph have negative weight cycle, exist a vertex v such that dist[v][v] < 0
     constexpr int64_t INF = 1e18;
     vector dist(n, vector<int64_t>(n, INF));
-    for (int i = 0; i < n; i++) {
+    for (int i = 0; i < m; i++) {
         int u, v, w;
         cin >> u >> v >> w;
         u--, v--;
-        dist[u][v] = w;
-        dist[v][u] = w;
+        dist[u][v] = min<int64_t>(dist[u][v], w);
+        dist[v][u] = min<int64_t>(dist[v][u], w);
     }
     for (int i = 0; i < n; i++) {
         dist[i][i] = 0;
@@ -1568,9 +2196,9 @@ snippet dijkstra "Single Source Shortest Path, O(m*log(n))"
     vector<int> par(n, -1);
     auto dijkstra = [&](int s) -> void {
         priority_queue<pair<int64_t, int>, vector<pair<int64_t, int>>, greater<pair<int64_t, int>>> pq;
-        pq.emplace(0, s);
         dist[s] = 0;
         cnt[s] = 1;
+        pq.emplace(dist[s], s);
         while (!pq.empty()) {
             auto [dist_v, v] = pq.top();
             pq.pop();
@@ -1581,8 +2209,8 @@ snippet dijkstra "Single Source Shortest Path, O(m*log(n))"
             for (auto [u, w] : adj[v]) {
                 if (dist[v] + w < dist[u]) {
                     dist[u] = dist[v] + w;
-                    par[u] = v;
                     cnt[u] = cnt[v];
+                    par[u] = v;
                     pq.emplace(dist[u], u);
                 }
                 else if (dist[v] + w == dist[u]) {
@@ -1853,7 +2481,7 @@ snippet split "Split String, O(n)"
 		int n = s.size();
 		vector<string> sp;
 
-		string tmp = "";
+		string tmp;
 		for (int i = 0; i < n; i++) {
 			if (s[i] != ch) {
 				tmp += s[i];
@@ -1940,11 +2568,12 @@ snippet manacher "Find all sub-palindrome, O(n)"
 
 snippet suffix_array "Suffix Array, build -> O(n*log(n)), lcp -> O(n)"
 	// with global array is faster (2s vs 3s for n = 1e7)
-	// constexpr n = 1e7, lg = 25; int t[n][lg];
-	template <typename T>
+	// constexpr int n = 1e7, lg = 25; int t[n][lg];
+	template <typename T, typename Cmp = less<T>>
 	struct SparseTable {
-		int n, lg;
+		int n;
 		vector<vector<T>> t;
+		const Cmp cmp = Cmp();
 
 		SparseTable() {}
 		SparseTable(const vector<T> &v) {
@@ -1952,11 +2581,11 @@ snippet suffix_array "Suffix Array, build -> O(n*log(n)), lcp -> O(n)"
 		}
 
 		inline T f(const T &a, const T &b) const {
-			return min(a, b);
+			return min(a, b, cmp);
 		}
 		void build(const vector<T> &v) {
 			n = v.size();
-			lg = __lg(n) + 2;
+			const int lg = __lg(n) + 2;
 			t.assign(n, vector<T>(lg));
 
 			for (int i = 0; i < n; i++) {
@@ -1970,8 +2599,7 @@ snippet suffix_array "Suffix Array, build -> O(n*log(n)), lcp -> O(n)"
 		}
 		T get(int l, int r) { 
 			assert(l >= 0 && l <= r && r < n);
-			int k = __builtin_clz(1) - __builtin_clz(r - l + 1);
-			//int k = __builtin_clzll(1) - __builtin_clzll(r - l + 1);
+			int k = __lg(r - l + 1);
 			return f(t[l][k], t[r - (1 << k) + 1][k]);
 		}
 	};
@@ -2175,100 +2803,64 @@ snippet suffix_array "Suffix Array, build -> O(n*log(n)), lcp -> O(n)"
 	};
 	${0}
 
-snippet mint "Struct Modular" 
-	// constexpr int MOD = 998244353;
-	constexpr int MOD = 1000000007;
-
-	struct mint {
-		int64_t v; 
-		explicit operator int() const { return v; }
-		explicit operator int64_t() const { return v; }
-		mint() { v = 0; }
-		mint(int64_t _v) {
-			v = (-MOD < _v && _v < MOD) ? _v : _v % MOD;
-			if (v < 0) v += MOD;
+snippet exgcd "Extended Euclidean Algorithm, O(log(min(a, b)))"
+	// g = gcd(a, b) = ax + by
+	int64_t exgcd(int64_t a, int64_t b, int64_t &x, int64_t &y) {
+		if (b == 0) {
+			x = 1;
+			y = 0;
+			return a;
 		}
+		int64_t x1, y1;
+		int64_t d = exgcd(b, a % b, x1, y1);
+		x = y1;
+		y = x1 - y1 * (a / b);
+		return d;
+	}
 
-		friend bool operator == (const mint &a, const mint &b) { return a.v == b.v; }
-		friend bool operator != (const mint &a, const mint &b) { return !(a == b); }
-		friend bool operator < (const mint &a, const mint &b) { return a.v < b.v; }
-		friend bool operator > (const mint &a, const mint &b) { return a.v > b.v; }
-		friend bool operator <= (const mint &a, const mint &b) { return a.v <= b.v; }
-		friend bool operator >= (const mint &a, const mint &b) { return a.v >= b.v; }
-
-		friend mint operator + (mint a, const mint &b) { return a += b; }
-		friend mint operator - (mint a, const mint &b) { return a -= b; }
-		friend mint operator * (mint a, const mint &b) { return a *= b; }
-		friend mint operator / (mint a, const mint &b) { return a /= b; }
-		mint& operator += (const mint &m) { if ((v += m.v) >= MOD) v -= MOD; return *this; }
-		mint& operator -= (const mint &m) { if ((v -= m.v) < 0) v += MOD; return *this; }
-		mint& operator *= (const mint &m) { v = v * m.v % MOD; return *this; }
-		mint& operator /= (const mint &m) { return (*this) *= inv(m); }
-
-		mint operator - () const { return mint(-v); }
-		mint& operator ++ () { return *this += 1; }
-		mint& operator -- () { return *this -= 1; }
-		mint operator ++ (int) { mint temp; temp.v = v++; return temp; }
-		mint operator -- (int) { mint temp; temp.v = v--; return temp; }
-
-		friend mint pow(mint a, int64_t b) {
-			assert(b >= 0);
-			mint res = 1;
-			while (b) {
-				if (b & 1) {
-					res *= a;
-				}
-				a *= a;
-				b >>= 1;
-			}
-			return res;
+	int64_t inverse(int64_t a, int64_t mod) {
+		int64_t x, y;
+		int64_t g = exgcd(a, mod, x, y);
+		if (g != 1) {
+			return -1;
 		}
-		friend mint inv(const mint &a) {
-			assert(a.v != 0);
-			return pow(a, MOD - 2);
-		}
-
-		friend ostream& operator << (ostream &os, const mint &m) {
-			os << m.v; 
-			return os;
-		}
-		friend istream& operator >> (istream &is, mint &m) {
-			int64_t x; 
-			is >> x;
-			m.v = x;
-			return is;
-		}
-	};
-	void print(mint x) { cerr << x; }
+		return (x % mod + mod) % mod;
+	}
 	${0}
 
-snippet comb "Factorial & Combination & Permutaiton"
-	mint fact[N];
-	mint fact_inv[N];
+snippet sieve "Sieve of Eratosthenes, O(n*log(log(n)))"
+	vector<bool> is_prime;
+	void sieve(int n) {
+		is_prime.assign(n + 1, true); 
+		is_prime[0] = is_prime[1] = false;
 
-	void init_fact(int n) {
-		fact[0] = 1;
-		for (int i = 1; i < n; i++) {
-			fact[i] = fact[i - 1] * i;
+		for (int i = 4; i <= n; i += 2) {
+			is_prime[i] = false;
 		}
-		fact_inv[n - 1] = inv(fact[n - 1]);
-		for (int i = n - 2; i >= 0; i--) {
-			fact_inv[i] = fact_inv[i + 1] * (i + 1);
+		for (int i = 3; i * i <= n; i += 2) {
+			if (is_prime[i]) {
+				for (int j = i * i; j <= n; j += 2 * i) {
+					is_prime[j] = false;
+				}
+			}
 		}
 	}
+	${0}
 
-	mint comb(int n, int k) {
-		if (k < 0 || k > n) {
-			return 0;
-		}
-		return fact[n] * fact_inv[k] * fact_inv[n - k];
-	}
+snippet linear_sieve "Linear Sieve with Smallest Prime Factor(SPF), O(n)"
+	vector<int> spf, primes;
+	void sieve(int n) {
+		spf.assign(n + 1, 0);
 
-	mint perm(int n, int k) {
-		if (k < 0 || k > n) {
-			return 0;
+		for (int i = 2; i <= n; i++) {
+			if (spf[i] == 0) {
+				spf[i] = i;
+				primes.push_back(i);
+			}
+			for (int j = 0; j < (int)primes.size() && i * primes[j] <= n && primes[j] <= spf[i]; j++) {
+				spf[i * primes[j]] = primes[j];
+			}
 		}
-		return fact[n] * fact_inv[n - k];
 	}
 	${0}
 
@@ -2356,23 +2948,6 @@ snippet matrix "Struct Matrix"
 		inline bool operator == (const matrix &b) { return mat == b.mat; }
 		inline bool operator != (const matrix &b) { return mat != b.mat; }
 	};
-	${0}
-
-snippet sieve "Sieve of Eratosthenes" 
-	vector<int> primes, min_factor;
-	void sieve(int n) {
-		min_factor.resize(n, 0);
-		min_factor[1] = 1;
-		for (int i = 2; i < n; i++) {
-			if (min_factor[i] == 0) {
-				primes.push_back(i);
-				min_factor[i] = i;
-			}
-			for (int j = 0; j < (int)primes.size() && i * primes[j] < n && primes[j] <= min_factor[i]; j++) {
-				min_factor[i * primes[j]] = primes[j];
-			}
-		}
-	}
 	${0}
 
 snippet segmented_sieve "Segmented Sieve of Eratosthenes" 
@@ -2523,343 +3098,62 @@ snippet convert_base "Cnovert Base [2-36]"
 	}
 	${0}
 
-snippet pw "Binary Exponentiation"
-	int64_t pw(int64_t a, int64_t b){
-		assert(b >= 0);
-		int64_t res = 1;
-		while (b) {
-			if (b & 1) {
-				res *= a;
-			}
-			a *= a;
-			b >>= 1;
-		}
-		return res;
-	}
-	${0}
-
-snippet table "Geometry Movement" 
+snippet move "Geometry Movement" 
     constexpr int dx[] = {-1, 1, 0, 0, -1, -1, 1, 1, 0};
     constexpr int dy[] = {0, 0, -1, 1, -1, 1, -1, 1, 0};
+    const string move = "UDLR";
     auto check = [&](int x, int y) -> bool {
         return x >= 0 && x < n && y >= 0 && y < m;
     };
+
+snippet mex "Minimum Excluded(MEX), O(n)"
+	template <typename T>
+	int mex(vector<T> &v) {
+		int n = v.size();
+		vector<bool> f(n + 1);
+		for (int x : v) {
+			if (x <= n) {
+				f[x] = 1;
+			}
+		}
+		int mex = 0;
+		while (f[mex]) {
+			mex++;
+		}
+		return mex;
+	}
 	${0}
 
-snippet geo2d "Geometry 2D"
-	const ld inf = 1e100;
-	const ld eps = 1e-9;
-	const ld PI = acos(ld(-1.0));
+snippet mex "MEX with Update, build -> O(n*log(n)), update -> O(log(n))"
+	template <typename T>
+	struct Mex {
+		vector<T> arr;
+		map<T, int> frequency;
+		set<T> missing_numbers;
 
-	int sign(ld x) {
-		return (x > eps) - (x < -eps);
-	}
+		Mex(const vector<T> &_arr) : arr(_arr) {
+			for (int i = 0; i <= (int)arr.size(); i++) {
+				missing_numbers.insert(i);
+			}
+			for (auto v : arr) {
+				frequency[v]++;
+				missing_numbers.erase(v);
+			}
+		}
 
-	struct PT {
-		ld x, y;
-
-		PT() : x(0), y(0) {}
-		PT(ld x, ld y) : x(x), y(y) {}
-		PT(const PT &p) : x(p.x), y(p.y) {}
-
-		PT operator + (const PT &p) const { return PT(x + p.x, y + p.y); }
-		PT operator - (const PT &p) const { return PT(x - p.x, y - p.y); }
-		PT operator * (const ld a) const { return PT(x * a, y * a); }
-		friend PT operator * (const ld &a, const PT &p) { return PT(a * p.x, a * p.y); }
-		PT operator / (const ld a) { return PT(x / a, y / a); }
-
-		bool operator == (PT p) const { return sign(p.x - x) == 0 && sign(p.y - y) == 0; }
-		bool operator != (PT p) const { return !(*this == p); }
-		bool operator < (PT p) const { return sign(p.x - x) == 0 ? y < p.y : x < p.x; }
-		bool operator > (PT p) const { return sign(p.x - x) == 0 ? y > p.y : x > p.x; }
-		bool operator <= (PT p) const { return (*this < p) || (*this == p); }
-		bool operator >= (PT p) const { return (*this > p) || (*this == p); }
-
-		ld norm() { return sqrt(x * x + y * y); }
-		ld norm2() { return x * x + y * y; }
-
-		PT perp() { return PT(-y, x); }
-		ld arg() { return atan2(y, x); }
-
-		PT truncate(ld r) { // returns a vector with norm r and having same direction
-			ld k = norm();
-			if (!sign(k)) return *this;
-			r /= k;
-			return PT(x * r, y * r);
+		void modify(int x, const T &v) {
+			assert(x < (int)arr.size());
+			if (--frequency[arr[x]] == 0) {
+				missing_numbers.insert(arr[x]);
+			}
+			arr[x] = v;
+			frequency[v]++;
+			missing_numbers.erase(v);
+		}
+		T get() {
+			return *missing_numbers.begin();
 		}
 	};
-
-	istream &operator >> (istream &in, PT &p) { return in >> p.x >> p.y; }
-	ostream &operator << (ostream &out, PT &p) { return out << "(" << p.x << "," << p.y << ")"; }
-
-	inline ld dot(PT a, PT b) { return a.x * b.x + a.y * b.y; }
-	inline ld dist(PT a, PT b) { return sqrt(dot(a - b, a - b)); }
-	inline ld dist2(PT a, PT b) { return dot(a - b, a - b); }
-	inline ld cross(PT a, PT b) { return a.x * b.y - a.y * b.x; }
-	inline ld cross2(PT a, PT b, PT c) { return cross(b - a, c - a); }
-	inline int orientation(PT a, PT b, PT c) { return sign(cross(b - a, c - a)); }
-
-	PT perp(PT a) { return PT(-a.y, a.x); }
-	PT rotateccw90(PT a) { return PT(-a.y, a.x); }
-	PT rotatecw90(PT a) { return PT(a.y, -a.x); }
-	PT rotateccw(PT a, ld t) { return PT(a.x * cos(t) - a.y * sin(t), a.x * sin(t) + a.y * cos(t)); }
-	PT rotatecw(PT a, ld t) { return PT(a.x * cos(t) + a.y * sin(t), -a.x * sin(t) + a.y * cos(t)); }
-	ld SQ(ld x) { return x * x; }
-	ld rad_to_deg(ld r) { return (r * 180.0 / PI); }
-	ld deg_to_rad(ld d) { return (d * PI / 180.0); }
-
-	ld get_angle(PT a, PT b) {
-		ld costheta = dot(a, b) / a.norm() / b.norm();
-		return acos(max((ld)-1.0, min((ld)1.0, costheta)));
-	}
-
-	bool is_point_in_angle(PT b, PT a, PT c, PT p) { // does point p lie in angle <bac
-		assert(orientation(a, b, c) != 0);
-		if (orientation(a, c, b) < 0) swap(b, c);
-		return orientation(a, c, p) >= 0 && orientation(a, b, p) <= 0;
-	}
-
-	bool half(PT p) {
-		return p.y > 0.0 || (p.y == 0.0 && p.x < 0.0);
-	}
-
-	void polar_sort(vector<PT> &v) { // sort points in counterclockwise
-		sort(v.begin(), v.end(), [](PT a,PT b) {
-			return make_tuple(half(a), 0.0, a.norm2()) < make_tuple(half(b), cross(a, b), b.norm2());
-		});
-	}
-
-	void polar_sort(vector<PT> &v, PT o) { // sort points in counterclockwise with respect to point o
-		sort(v.begin(), v.end(), [&](PT a,PT b) {
-			return make_tuple(half(a - o), 0.0, (a - o).norm2()) < make_tuple(half(b - o), cross(a - o, b - o), (b - o).norm2());
-		});
-	}
-
-	struct line {
-		PT a, b; // goes through points a and b
-		PT v; ld c;  //line form: direction vec [cross] (x, y) = c 
-
-		line() {}
-		//direction vector v and offset c
-		line(PT v, ld c) : v(v), c(c) {
-			auto p = get_points();
-			a = p.first; b = p.second;
-		}
-		// equation ax + by + c = 0
-		line(ld _a, ld _b, ld _c) : v({_b, -_a}), c(-_c) {
-			auto p = get_points();
-			a = p.first; b = p.second;
-		}
-		// goes through points p and q
-		line(PT p, PT q) : v(q - p), c(cross(v, p)), a(p), b(q) {}
-
-		//extract any two points from this line
-		pair<PT, PT> get_points() {
-			PT p, q; ld a = -v.y, b = v.x; // ax + by = c
-			if (sign(a) == 0) {
-				p = PT(0, c / b);
-				q = PT(1, c / b);
-			}
-			else if (sign(b) == 0) {
-				p = PT(c / a, 0);
-				q = PT(c / a, 1);
-			}
-			else {
-				p = PT(0, c / b);
-				q = PT(1, (c - a) / b);
-			}
-			return {p, q};
-		}
-
-		// ax + by + c = 0
-		array<ld, 3> get_abc() {
-			ld a = -v.y, b = v.x;
-			return {a, b, -c};
-		}
-
-		// 1 if on the left, -1 if on the right, 0 if on the line
-		int side(PT p) { return sign(cross(v, p) - c); }
-
-		// line that is perpendicular to this and goes through point p
-		line perpendicular_through(PT p) { return {p, p + perp(v)}; }
-
-		// translate the line by vector t i.e. shifting it by vector t
-		line translate(PT t) { return {v, c + cross(v, t)}; }
-
-		// compare two points by their orthogonal projection on this line
-		// a projection point comes before another if it comes first according to vector v
-		bool cmp_by_projection(PT p, PT q) { return dot(v, p) < dot(v, q); }
-
-		line shift_left(ld d) {
-			PT z = v.perp().truncate(d);
-			return line(a + z, b + z);
-		}
-	};
-
-	// find a point from a through b with distance d
-	PT point_along_line(PT a, PT b, ld d) {
-		assert(a != b);
-		return a + (((b - a) / (b - a).norm()) * d);
-	}
-
-	// projection point c onto line through a and b  assuming a != b
-	PT project_from_point_to_line(PT a, PT b, PT c) {
-		return a + (b - a) * dot(c - a, b - a) / (b - a).norm2();
-	}
-
-	// reflection point c onto line through a and b  assuming a != b
-	PT reflection_from_point_to_line(PT a, PT b, PT c) {
-		PT p = project_from_point_to_line(a, b, c);
-		return p + p - c;
-	}
-
-	// minimum distance from point c to line through a and b
-	ld dist_from_point_to_line(PT a, PT b, PT c) {
-		return fabs(cross(b - a, c - a) / (b - a).norm());
-	}
-
-	// returns true if  point p is on line segment ab
-	bool is_point_on_seg(PT a, PT b, PT p) {
-		if (fabs(cross(p - b, a - b)) < eps) {
-			if (p.x < min(a.x, b.x) - eps || p.x > max(a.x, b.x) + eps) return false;
-			if (p.y < min(a.y, b.y) - eps || p.y > max(a.y, b.y) + eps) return false;
-			return true;
-		}
-		return false;
-	}
-
-	// minimum distance point from point c to segment ab that lies on segment ab
-	PT project_from_point_to_seg(PT a, PT b, PT c) {
-		ld r = dist2(a, b);
-		if (sign(r) == 0) return a;
-		r = dot(c - a, b - a) / r;
-		if (r < 0) return a;
-		if (r > 1) return b;
-		return a + (b - a) * r;
-	}
-
-	// minimum distance from point c to segment ab
-	ld dist_from_point_to_seg(PT a, PT b, PT c) {
-		return dist(c, project_from_point_to_seg(a, b, c));
-	}
-
-	// 0 if not parallel, 1 if parallel, 2 if collinear
-	int is_parallel(PT a, PT b, PT c, PT d) {
-		ld k = fabs(cross(b - a, d - c));
-		if (k < eps){
-			if (fabs(cross(a - b, a - c)) < eps && fabs(cross(c - d, c - a)) < eps) return 2;
-			else return 1;
-		}
-		else return 0;
-	}
-
-	// check if two lines are same
-	bool are_lines_same(PT a, PT b, PT c, PT d) {
-		if (fabs(cross(a - c, c - d)) < eps && fabs(cross(b - c, c - d)) < eps) return true;
-		return false;
-	}
-
-	// bisector vector of <abc
-	PT angle_bisector(PT &a, PT &b, PT &c){
-		PT p = a - b, q = c - b;
-		return p + q * sqrt(dot(p, p) / dot(q, q));
-	}
-
-	// 1 if point is ccw to the line, 2 if point is cw to the line, 3 if point is on the line
-	int point_line_relation(PT a, PT b, PT p) {
-		int c = sign(cross(p - a, b - a));
-		if (c < 0) return 1;
-		if (c > 0) return 2;
-		return 3;
-	}
-
-	// intersection point between ab and cd assuming unique intersection exists
-	bool line_line_intersection(PT a, PT b, PT c, PT d, PT &ans) {
-		ld a1 = a.y - b.y, b1 = b.x - a.x, c1 = cross(a, b);
-		ld a2 = c.y - d.y, b2 = d.x - c.x, c2 = cross(c, d);
-		ld det = a1 * b2 - a2 * b1;
-		if (det == 0) return 0;
-		ans = PT((b1 * c2 - b2 * c1) / det, (c1 * a2 - a1 * c2) / det);
-		return 1;
-	}
-
-	// intersection point between segment ab and segment cd assuming unique intersection exists
-	bool seg_seg_intersection(PT a, PT b, PT c, PT d, PT &ans) {
-		ld oa = cross2(c, d, a), ob = cross2(c, d, b);
-		ld oc = cross2(a, b, c), od = cross2(a, b, d);
-		if (oa * ob < 0 && oc * od < 0){
-			ans = (a * ob - b * oa) / (ob - oa);
-			return 1;
-		}
-		else return 0;
-	}
-
-	// intersection point between segment ab and segment cd assuming unique intersection may not exists
-	// se.size()==0 means no intersection
-	// se.size()==1 means one intersection
-	// se.size()==2 means range intersection
-	set<PT> seg_seg_intersection_inside(PT a,  PT b,  PT c,  PT d) {
-		PT ans;
-		if (seg_seg_intersection(a, b, c, d, ans)) return {ans};
-		set<PT> se;
-		if (is_point_on_seg(c, d, a)) se.insert(a);
-		if (is_point_on_seg(c, d, b)) se.insert(b);
-		if (is_point_on_seg(a, b, c)) se.insert(c);
-		if (is_point_on_seg(a, b, d)) se.insert(d);
-		return se;
-	}
-
-	// intersection  between segment ab and line cd
-	// 0 if do not intersect, 1 if proper intersect, 2 if segment intersect
-	int seg_line_relation(PT a, PT b, PT c, PT d) {
-		ld p = cross2(c, d, a);
-		ld q = cross2(c, d, b);
-		if (sign(p) == 0 && sign(q) == 0) return 2;
-		else if (p * q < 0) return 1;
-		else return 0;
-	}
-
-	// intersection between segament ab and line cd assuming unique intersection exists
-	bool seg_line_intersection(PT a, PT b, PT c, PT d, PT &ans) {
-		bool k = seg_line_relation(a, b, c, d);
-		assert(k != 2);
-		if (k) line_line_intersection(a, b, c, d, ans);
-		return k;
-	}
-
-	// minimum distance from segment ab to segment cd
-	ld dist_from_seg_to_seg(PT a, PT b, PT c, PT d) {
-		PT dummy;
-		if (seg_seg_intersection(a, b, c, d, dummy)) return 0.0;
-		else return min({dist_from_point_to_seg(a, b, c), dist_from_point_to_seg(a, b, d), 
-			dist_from_point_to_seg(c, d, a), dist_from_point_to_seg(c, d, b)});
-	}
-
-	// minimum distance from point c to ray (starting point a and direction vector b)
-	ld dist_from_point_to_ray(PT a, PT b, PT c) {
-		b = a + b;
-		ld r = dot(c - a, b - a);
-		if (r < 0.0) return dist(c, a);
-		return dist_from_point_to_line(a, b, c);
-	}
-
-	// starting point as and direction vector ad
-	bool ray_ray_intersection(PT as, PT ad, PT bs, PT bd) {
-		ld dx = bs.x - as.x, dy = bs.y - as.y;
-		ld det = bd.x * ad.y - bd.y * ad.x;
-		if (fabs(det) < eps) return 0;
-		ld u = (dy * bd.x - dx * bd.y) / det;
-		ld v = (dy * ad.x - dx * ad.y) / det;
-		if (sign(u) >= 0 && sign(v) >= 0) return 1;
-		else return 0;
-	}
-
-	ld ray_ray_distance(PT as, PT ad, PT bs, PT bd) {
-		if (ray_ray_intersection(as, ad, bs, bd)) return 0.0;
-		ld ans = dist_from_point_to_ray(as, ad, bs);
-		ans = min(ans, dist_from_point_to_ray(bs, bd, as));
-		return ans;
-	}
 	${0}
 
 snippet arpa "Offline RMQ (Arpa's Trick), O(n + q)"

@@ -84,14 +84,14 @@ require('competitest').setup {
     save_all_files = false,
     compile_directory = '.',
     compile_command = {
-        c = { exec = 'gcc', args = { '-Wall', '-Wextra', '$(FNAME)', '-o', '$(FNOEXT)' } },
-        cpp = { exec = 'g++', args = { '-DDEBUG', '-static', '-Wall', '-Wextra', '-O2', '-std=c++20', '$(FNAME)', '-o', '$(FNOEXT)' } },
+        c = { exec = 'gcc', args = { '-Wall', '-Wextra', '$(FNAME)', '-o', '$(FNOEXT).exe' } },
+        cpp = { exec = 'g++', args = { '-Wall', '-Wextra', '-Wshadow', '-ggdb3', '-D_GLIBCXX_ASSERTIONS', '-fmax-errors=2', '-fsanitize=undefined', '-DDEBUG', '-static', '-O2', '-std=c++23', '$(FNAME)', '-o', '$(FNOEXT).exe' } },
     },
 
     running_directory = '.',
     run_command = {
-        c = { exec = './$(FNOEXT)' },
-        cpp = { exec = './$(FNOEXT)' },
+        c = { exec = './$(FNOEXT).exe' },
+        cpp = { exec = './$(FNOEXT).exe' },
         python = { exec = 'python3', args = { '$(FNAME)' } },
     },
 

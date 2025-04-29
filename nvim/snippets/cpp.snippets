@@ -6,7 +6,6 @@ snippet snippets "Snippets for C++"
 	dbg
 	rng
 	power
-	mint
 
 	#Data Structures#
 	mstack
@@ -45,6 +44,8 @@ snippet snippets "Snippets for C++"
 	prim
 	kruskal
 	twosat	
+	flow1
+	flow2
 
 	#String#
 	split
@@ -60,6 +61,7 @@ snippet snippets "Snippets for C++"
 	linear_sieve
 
 	#Math#
+	mint
 	matrix
 	segmented_sieve
 	miller_rabin
@@ -99,7 +101,9 @@ snippet beg "Start Template"
 	}
 
 snippet debug "Debug Template"
-	#define dbg(...) cerr << __DEBUG_UTIL__::outer << __LINE__ << ": [", __DEBUG_UTIL__::printer(#__VA_ARGS__, __VA_ARGS__)
+	#define dbg(...) cerr << __DEBUG_UTIL__::outer << __LINE__ << ": [", \
+					 __DEBUG_UTIL__::printer(#__VA_ARGS__, __VA_ARGS__), \
+					 cerr << __DEBUG_UTIL__::outer << "]\n" << __DEBUG_UTIL__::reset
 
 	namespace __DEBUG_UTIL__ {
 		const string WHITE = "\033[0;m";
@@ -107,8 +111,8 @@ snippet debug "Debug Template"
 		const string BLUE = "\033[0;34m";
 		const string GREEN = "\033[0;32m";
 
-		bool colored_output = false; 
-		string white = colored_output ? WHITE : "";
+		bool colored_output = isatty(fileno(stderr)); 
+		string reset = colored_output ? WHITE : "";
 		string outer = colored_output ? RED : "";
 		string var_name = colored_output ? BLUE : "";
 		string var_value = colored_output ? GREEN : "";
@@ -116,26 +120,20 @@ snippet debug "Debug Template"
 		template <typename T>
 		concept is_iterable = requires(T &&x) { begin(x); } && !is_same_v<remove_cvref_t<T>, string>;
 
-		void print(const char *x) { 
-			cerr << x; 
-		}
-		void print(char x) { 
-			cerr << "\'" << x << "\'"; 
-		}
-		void print(bool x) { 
-			cerr << (x ? "T" : "F"); 
-		}
-		void print(string x) { 
-			cerr << "\"" << x << "\"";
-		}
+		template <typename T>
+		void print(T *p);
+
+		void print(const char *x) { cerr << x; }
+		void print(char x) { cerr << "\'" << x << "\'"; }
+		void print(bool x) { cerr << (x ? "true" : "false"); }
+		void print(string x) { cerr << "\"" << x << "\""; }
 
 		void print(vector<bool> &&v) { 
-			/* Overloaded this because stl optimizes vector<bool> by using
-			   _Bit_reference instead of bool to conserve space. */
+			// Vector<bool>, stl optimizes this by using _Bit_reference
 			int f = 0;
 			cerr << "{";
 			for (auto &&i : v) {
-				cerr << (f++ ? "," : "") << (i ? "T" : "F");
+				cerr << (f++ ? ", " : "") << (i ? "true" : "false");
 			}
 			cerr << "}";
 		}
@@ -144,68 +142,81 @@ snippet debug "Debug Template"
 		void print(T &&x) {
 			if constexpr (is_iterable<T>) {
 				if (size(x) && is_iterable<decltype(*(begin(x)))>) { 
-					/* Iterable inside Iterable */
+					// Iterable inside Iterable
 					int f = 0;
 					int w = max(0, (int)log10(size(x) - 1)) + 2;
-					cerr << "\n~~~~~\n";
+					cerr << "\n~~~~~~~~\n";
 					for (auto &&i : x) {
 						cerr << setw(w) << left << f++, print(i), cerr << "\n";
 					}
-					cerr << "~~~~~\n";
-				}
+					cerr << "~~~~~~~~\n";
+				} 
 				else { 
-					/* Normal Iterable */
+					// Normal Iterable
 					int f = 0;
 					cerr << "{";
 					for (auto &&i : x) {
-						cerr << (f++ ? "," : ""), print(i);
+						cerr << (f++ ? ", " : ""), print(i);
 					}
 					cerr << "}";
 				}
-			}
+			} 
 			else if constexpr (requires { x.pop(); }) {
-				/* Stacks, Queues, Priority Queues */
 				auto temp = x;
 				int f = 0;
 				cerr << "{";
 				if constexpr (requires { x.top(); }) {
+					// Stack, Priority Queue
 					while (!temp.empty()) {
-						cerr << (f++ ? "," : ""), print(temp.top()), temp.pop();
+						cerr << (f++ ? ", " : ""), print(temp.top()), temp.pop();
 					}
-				}
+				} 
 				else {
+					// Queue
 					while (!temp.empty()) {
-						cerr << (f++ ? "," : ""), print(temp.front()), temp.pop();
+						cerr << (f++ ? ", " : ""), print(temp.front()), temp.pop();
 					}
 				}
 				cerr << "}";
-			}
+			} 
 			else if constexpr (requires { x.first; x.second; }) {
-				/* Pair */
-				cerr << "(", print(x.first), cerr << ",", print(x.second), cerr << ")";
-			}
+				// Pair
+				cerr << "(", print(x.first), cerr << ", ", print(x.second), cerr << ")";
+			} 
 			else if constexpr (requires { get<0>(x); }) {
-				/* Tuple */
+				// Tuple
 				int f = 0;
 				cerr << "("; 
 				apply([&f](auto... args) {
-					((cerr << (f++ ? "," : ""), print(args)), ...);
-					}, x);
+					((cerr << (f++ ? ", " : ""), print(args)), ...);
+				}, x);
 				cerr << ")";
-			}
+			} 
 			else {
 				cerr << x;
+			}
+		}
+
+		template <typename T>
+		void print(T *p) {
+			// Pointers: address and, if not null, pointed value
+			if (!p) {
+				cerr << "(nullptr)";
+			} 
+			else {
+				cerr << "(" << p << ") -> ";
+				print(*p);
 			}
 		}
 
 		template <typename T, typename... V>
 		void printer(const char *names, T &&head, V &&...tail) {
 			int i = 0;
-			for (size_t bracket = 0; names[i] != '\0' and (names[i] != ',' or bracket != 0); i++) {
-				if (names[i] == '(' or names[i] == '<' or names[i] == '{') {
+			for (int bracket = 0; names[i] != '\0' && (names[i] != ',' || bracket != 0); i++) {
+				if (names[i] == '(' || names[i] == '<' || names[i] == '{') {
 					bracket++;
 				}
-				else if (names[i] == ')' or names[i] == '>' or names[i] == '}') {
+				else if (names[i] == ')' || names[i] == '>' || names[i] == '}') {
 					bracket--;
 				}
 			}
@@ -213,10 +224,8 @@ snippet debug "Debug Template"
 			cerr.write(names, i) << outer << " = " << var_value;
 			print(head);
 			if constexpr (sizeof...(tail)) {
-				cerr << outer << " ||", printer(names + i + 1, tail...);
-			}
-			else {
-				cerr << outer << "]\n" << white;
+				cerr << outer << " ||";
+				printer(names + i + 1, tail...);
 			}
 		}
 	}
@@ -249,210 +258,6 @@ snippet power "Binary Exponentiation, O(log(b))
 		}
 		return res;
 	}
-	${0}
-
-snippet mint "Struct Modular Number, MOD Must be Prime" 
-	template <typename M>
-	struct Modular {
-	public:
-		using Type = typename decay<decltype(M::value)>::type;
-
-		constexpr Modular() : value() {}
-		template <typename T>
-		Modular(const T &x) {
-			value = normalize(x);
-		}
-
-		const Type operator()() const { return value; }
-		template <typename T>
-		explicit operator T() const { return static_cast<T>(value); }
-		constexpr static Type mod() { return M::value; }
-
-		template <typename T>
-		static Type normalize(const T &x) {
-			Type v;
-			if (-mod() <= x && x < mod()) {
-				v = static_cast<Type>(x);
-			}
-			else {
-				v = static_cast<Type>(x % mod());
-			}
-			if (v < 0) {
-				v += mod();
-			}
-			return v;
-		}
-
-		Modular& operator++() { return *this += 1; }
-		Modular& operator--() { return *this -= 1; }
-		Modular operator++(int) { Modular res(*this); *this += 1; return res; }
-		Modular operator--(int) { Modular res(*this); *this -= 1; return res; }
-		Modular operator-() const { return Modular(-value); }
-
-		Modular& operator+=(const Modular &other) { if ((value += other.value) >= mod()) value -= mod(); return *this; }
-		template <typename T> Modular& operator+=(const T &other) { return *this += Modular(other); }
-
-		Modular& operator-=(const Modular &other) { if ((value -= other.value) < 0) value += mod(); return *this; }
-		template <typename T> Modular& operator-=(const T &other) { return *this -= Modular(other); }
-
-		template <typename T = M>
-		typename enable_if<is_same<typename Modular<T>::Type, int>::value, Modular>::type& operator*=(const Modular &other) {
-			value = normalize(static_cast<int64_t>(value) * static_cast<int64_t>(other.value));
-			return *this;
-		}
-		template <typename T = M>
-		typename enable_if<is_same<typename Modular<T>::Type, int64_t>::value, Modular>::type& operator*=(const Modular &other) {
-			int64_t q = int64_t(static_cast<long double>(value) * other.value / mod());
-			value = normalize(value * other.value - q * mod());
-			return *this;
-		}
-		template <typename T = M>
-		typename enable_if<!is_integral<typename Modular<T>::Type>::value, Modular>::type& operator*=(const Modular &other) {
-			value = normalize(value * other.value);
-			return *this;
-		}
-
-		Modular& operator/=(const Modular &other) { return *this *= inverse(other); }
-
-		template <typename T> friend Modular<T> operator+(const Modular<T> &lhs, const Modular<T> &rhs) { return Modular<T>(lhs) += rhs; }
-		template <typename T, typename U> friend Modular<T> operator+(const Modular<T> &lhs, U rhs) { return Modular<T>(lhs) += rhs; }
-		template <typename T, typename U> friend Modular<T> operator+(U lhs, const Modular<T> &rhs) { return Modular<T>(lhs) += rhs; }
-		 
-		template <typename T> friend Modular<T> operator-(const Modular<T> &lhs, const Modular<T> &rhs) { return Modular<T>(lhs) -= rhs; }
-		template <typename T, typename U> friend Modular<T> operator-(const Modular<T> &lhs, U rhs) { return Modular<T>(lhs) -= rhs; }
-		template <typename T, typename U> friend Modular<T> operator-(U lhs, const Modular<T> &rhs) { return Modular<T>(lhs) -= rhs; }
-		 
-		template <typename T> friend Modular<T> operator*(const Modular<T> &lhs, const Modular<T> &rhs) { return Modular<T>(lhs) *= rhs; }
-		template <typename T, typename U> friend Modular<T> operator*(const Modular<T> &lhs, U rhs) { return Modular<T>(lhs) *= rhs; }
-		template <typename T, typename U> friend Modular<T> operator*(U lhs, const Modular<T> &rhs) { return Modular<T>(lhs) *= rhs; }
-		 
-		template <typename T> friend Modular<T> operator/(const Modular<T> &lhs, const Modular<T> &rhs) { return Modular<T>(lhs) /= rhs; }
-		template <typename T, typename U> friend Modular<T> operator/(const Modular<T> &lhs, U rhs) { return Modular<T>(lhs) /= rhs; }
-		template <typename T, typename U> friend Modular<T> operator/(U lhs, const Modular<T> &rhs) { return Modular<T>(lhs) /= rhs; }
-
-		template <typename T> friend bool operator==(const Modular<T> &lhs, const Modular<T> &rhs) { return lhs.value == rhs.value; }
-		template <typename T, typename U> friend bool operator==(const Modular<T> &lhs, U rhs) { return lhs == Modular<T>(rhs); }
-		template <typename T, typename U> friend bool operator==(U lhs, const Modular<T> &rhs) { return Modular<T>(lhs) == rhs; }
-
-		template <typename T> friend bool operator!=(const Modular<T> &lhs, const Modular<T> &rhs) { return !(lhs == rhs); }
-		template <typename T, typename U> friend bool operator!=(const Modular<T> &lhs, U rhs) { return !(lhs == rhs); }
-		template <typename T, typename U> friend bool operator!=(U lhs, const Modular<T> &rhs) { return !(lhs == rhs); }
-
-		template <typename T> friend bool operator<(const Modular<T> &lhs, const Modular<T> &rhs) { return lhs.value < rhs.value; }
-		template <typename T> friend bool operator>(const Modular<T> &lhs, const Modular<T> &rhs) { return lhs.value > rhs.value; }
-		template <typename T> friend bool operator<=(const Modular<T> &lhs, const Modular<T> &rhs) { return lhs.value <= rhs.value; }
-		template <typename T> friend bool operator>=(const Modular<T> &lhs, const Modular<T> &rhs) { return lhs.value >= rhs.value; }
-
-		template <typename U, typename T>
-		friend U& operator<<(U &stream, const Modular<T> &number) {
-			return stream << number();
-		}
-
-		template <typename U, typename T>
-		friend U& operator>>(U &stream, Modular<T> &number) {
-			typename common_type<typename Modular<T>::Type, int64_t>::type x;
-			stream >> x;
-			number.value = Modular<T>::normalize(x);
-			return stream;
-		}
-
-		template <typename T, typename U>
-		friend Modular<T> power(Modular<T> a, U b) {
-			assert(b >= 0);
-			Modular<T> res = 1;
-			while (b) {
-				if (b & 1) {
-					res *= a;
-				}
-				a *= a;
-				b >>= 1;
-			}
-			return res;
-		}
-
-		template<typename T>
-		friend Modular<T> inverse(const Modular<T> &a) {
-			assert(a.value != 0);
-			return power(a, mod() - 2);
-		}
-
-		template <typename T>
-		friend string to_string(const Modular<T> &number) {
-		  return to_string(number());
-		}
-
-	private:
-		Type value; 
-	};
-
-	//constexpr int MOD = 998244353;
-	constexpr int MOD = 1000000007;
-	using Mint = Modular<integral_constant<decay<decltype(MOD)>::type, MOD>>;
-
-	/*
-	// Dynamic Modular
-	using ModType = int;
-	struct VarMod { static ModType value; };
-	ModType VarMod::value = 1000000007;
-	ModType &MOD = VarMod::value;
-	using Mint = Modular<VarMod>;
-	*/
-
-	struct Comb {
-		int n;
-		vector<Mint> _fact;
-		vector<Mint> _inv_fact;
-		vector<Mint> _inv;
-		
-		Comb() : n{0}, _fact{1}, _inv_fact{1}, _inv{0} {}
-		Comb(int _n) : Comb() {
-			init(_n);
-		}
-		
-		void init(int m) {
-			if (m <= n) {
-				return;
-			}
-			_fact.resize(m + 1);
-			_inv_fact.resize(m + 1);
-			_inv.resize(m + 1);
-			
-			for (int i = n + 1; i <= m; i++) {
-				_fact[i] = _fact[i - 1] * i;
-			}
-			_inv_fact[m] = inverse(_fact[m]);
-			for (int i = m; i > n; i--) {
-				_inv_fact[i - 1] = _inv_fact[i] * i;
-				_inv[i] = _inv_fact[i] * _fact[i - 1];
-			}
-			n = m;
-		}
-		
-		Mint fact(int m) {
-			if (m > n) {
-				init(2 * m);
-			}
-			return _fact[m];
-		}
-		Mint inv_fact(int m) {
-			if (m > n) {
-				init(2 * m);
-			}
-			return _inv_fact[m];
-		}
-		Mint inv(int m) {
-			if (m > n) {
-				init(2 * m);
-			}
-			return _inv[m];
-		}
-		Mint comb(int m, int k) {
-			if (k < 0 || k > m) {
-				return 0;
-			}
-			return fact(m) * inv_fact(k) * inv_fact(m - k);
-		}
-	} comb;
 	${0}
 
 snippet mstack "Minimum Stack, O(1)" 
@@ -2558,6 +2363,78 @@ snippet towsat "2-SAT (Boolean satisfiability problem)"
 	};
 	${0}
 
+snippet flow1 "Maximum Flow (Edmons-Karp), O(n * m^2)"
+	// Maximum Flow (Edmons-Karp), O(n * m^2)
+	template <typename T>
+	struct Flow {
+		struct Edge {
+			int from, to;
+			T cap, flow;
+			Edge(int _from, int _to, T _cap, T _flow) : from(_from), to(_to), cap(_cap), flow(_flow) {}
+		};
+
+		const int n;
+		vector<vector<int>> adj;
+		vector<Edge> edges;
+		vector<int> par;
+
+		Flow(int _n) : n(_n), adj(_n) {}
+
+		void add_edge(int u, int v, T c) {
+			adj[u].push_back(edges.size());
+			edges.emplace_back(u, v, c, 0);
+			adj[v].push_back(edges.size());
+			edges.emplace_back(v, u, 0, 0);
+		}
+
+		bool bfs(int s, int t) {
+			par.assign(n, -1);
+			queue<int> q;
+			par[s] = -2;
+			q.push(s);
+			while (!q.empty()) {
+				int v = q.front();
+				q.pop();
+				for (int i : adj[v]) {
+					auto [_, u, c, f] = edges[i];
+					if (c - f > 0 && par[u] == -1) {
+						par[u] = i;
+						q.push(u);
+						if (u == t) {
+							return true;
+						}
+					}
+				}
+			}
+			return false;
+		}
+
+		T augment(int s, int t) {
+			T flow = numeric_limits<T>::max();
+			for (int cur = t; cur != s;) {
+				auto [v, _, c, f] = edges[par[cur]];
+				flow = min(flow, c - f);
+				cur = v;
+			}
+			for (int cur = t; cur != s;) {
+				auto [v, _, c, f] = edges[par[cur]];
+				edges[par[cur]].flow += flow;
+				edges[par[cur] ^ 1].flow -= flow;
+				cur = v;
+			}
+			return flow;
+		}
+
+		T max_flow(int s, int t) {
+			T flow = 0;
+			while (bfs(s, t)) {
+				flow += augment(s, t);
+			}
+			return flow;
+		}
+	};
+	${0}
+
 snippet split "Split String, O(n)" 
 	vector<string> split(const string &s, const char ch = ' ') {
 		int n = s.size();
@@ -2578,6 +2455,84 @@ snippet split "Split String, O(n)"
 		}
 		return sp;
 	}
+	${0}
+
+snippet flow2 "Maximum Flow (Dinics), O(n^2 * m)"
+	// Maximum Flow (Dinics), O(n^2 * m)
+	template <typename T>
+	struct Flow {
+		struct Edge {
+			int from, to;
+			T cap, flow;
+			Edge(int _from, int _to, T _cap, T _flow) : from(_from), to(_to), cap(_cap), flow(_flow) {}
+		};
+
+		const int n;
+		vector<vector<int>> adj;
+		vector<Edge> edges;
+		vector<int> h, cur;
+
+		Flow(int _n) : n(_n), adj(_n) {}
+
+		void add_edge(int u, int v, T c) {
+			adj[u].push_back(edges.size());
+			edges.emplace_back(u, v, c, 0);
+			adj[v].push_back(edges.size());
+			edges.emplace_back(v, u, 0, 0);
+		}
+		
+		bool bfs(int s, int t) {
+			h.assign(n, -1);
+			queue<int> q;
+			h[s] = 0;
+			q.push(s);
+			while (!q.empty()) {
+				int v = q.front();
+				q.pop();
+				for (int i : adj[v]) {
+					auto [_, u, c, f] = edges[i];
+					if (c - f > 0 && h[u] == -1) {
+						h[u] = h[v] + 1;
+						q.push(u);
+						if (u == t) {
+							return true;
+						}
+					}
+				}
+			}
+			return false;
+		}
+		
+		T dfs(int v, int t, T flow) {
+			if (v == t) {
+				return flow;
+			}
+			T r = flow;
+			for (int &i = cur[v]; i < int(adj[v].size()); i++) {
+				const int j = adj[v][i];
+				auto [_, u, c, f] = edges[j];
+				if (c - f > 0 && h[u] == h[v] + 1) {
+					T a = dfs(u, t, min(r, c - f));
+					edges[j].flow += a;
+					edges[j ^ 1].flow -= a;
+					r -= a;
+					if (r == 0) {
+						return flow;
+					}
+				}
+			}
+			return flow - r;
+		}
+
+		T max_flow(int s, int t) {
+			T flow = 0;
+			while (bfs(s, t)) {
+				cur.assign(n, 0);
+				flow += dfs(s, t, numeric_limits<T>::max());
+			}
+			return flow;
+		}
+	};
 	${0}
 
 snippet strip "Strip String, O(n)"
@@ -3011,6 +2966,210 @@ snippet linear_sieve "Linear Sieve with Smallest Prime Factor(SPF), O(n)"
 			}
 		}
 	}
+	${0}
+
+snippet mint "Struct Modular Number, MOD Must be Prime" 
+	template <typename M>
+	struct Modular {
+	public:
+		using Type = typename decay<decltype(M::value)>::type;
+
+		constexpr Modular() : value() {}
+		template <typename T>
+		Modular(const T &x) {
+			value = normalize(x);
+		}
+
+		const Type operator()() const { return value; }
+		template <typename T>
+		explicit operator T() const { return static_cast<T>(value); }
+		constexpr static Type mod() { return M::value; }
+
+		template <typename T>
+		static Type normalize(const T &x) {
+			Type v;
+			if (-mod() <= x && x < mod()) {
+				v = static_cast<Type>(x);
+			}
+			else {
+				v = static_cast<Type>(x % mod());
+			}
+			if (v < 0) {
+				v += mod();
+			}
+			return v;
+		}
+
+		Modular& operator++() { return *this += 1; }
+		Modular& operator--() { return *this -= 1; }
+		Modular operator++(int) { Modular res(*this); *this += 1; return res; }
+		Modular operator--(int) { Modular res(*this); *this -= 1; return res; }
+		Modular operator-() const { return Modular(-value); }
+
+		Modular& operator+=(const Modular &other) { if ((value += other.value) >= mod()) value -= mod(); return *this; }
+		template <typename T> Modular& operator+=(const T &other) { return *this += Modular(other); }
+
+		Modular& operator-=(const Modular &other) { if ((value -= other.value) < 0) value += mod(); return *this; }
+		template <typename T> Modular& operator-=(const T &other) { return *this -= Modular(other); }
+
+		template <typename T = M>
+		typename enable_if<is_same<typename Modular<T>::Type, int>::value, Modular>::type& operator*=(const Modular &other) {
+			value = normalize(static_cast<int64_t>(value) * static_cast<int64_t>(other.value));
+			return *this;
+		}
+		template <typename T = M>
+		typename enable_if<is_same<typename Modular<T>::Type, int64_t>::value, Modular>::type& operator*=(const Modular &other) {
+			int64_t q = int64_t(static_cast<long double>(value) * other.value / mod());
+			value = normalize(value * other.value - q * mod());
+			return *this;
+		}
+		template <typename T = M>
+		typename enable_if<!is_integral<typename Modular<T>::Type>::value, Modular>::type& operator*=(const Modular &other) {
+			value = normalize(value * other.value);
+			return *this;
+		}
+
+		Modular& operator/=(const Modular &other) { return *this *= inverse(other); }
+
+		template <typename T> friend Modular<T> operator+(const Modular<T> &lhs, const Modular<T> &rhs) { return Modular<T>(lhs) += rhs; }
+		template <typename T, typename U> friend Modular<T> operator+(const Modular<T> &lhs, U rhs) { return Modular<T>(lhs) += rhs; }
+		template <typename T, typename U> friend Modular<T> operator+(U lhs, const Modular<T> &rhs) { return Modular<T>(lhs) += rhs; }
+		 
+		template <typename T> friend Modular<T> operator-(const Modular<T> &lhs, const Modular<T> &rhs) { return Modular<T>(lhs) -= rhs; }
+		template <typename T, typename U> friend Modular<T> operator-(const Modular<T> &lhs, U rhs) { return Modular<T>(lhs) -= rhs; }
+		template <typename T, typename U> friend Modular<T> operator-(U lhs, const Modular<T> &rhs) { return Modular<T>(lhs) -= rhs; }
+		 
+		template <typename T> friend Modular<T> operator*(const Modular<T> &lhs, const Modular<T> &rhs) { return Modular<T>(lhs) *= rhs; }
+		template <typename T, typename U> friend Modular<T> operator*(const Modular<T> &lhs, U rhs) { return Modular<T>(lhs) *= rhs; }
+		template <typename T, typename U> friend Modular<T> operator*(U lhs, const Modular<T> &rhs) { return Modular<T>(lhs) *= rhs; }
+		 
+		template <typename T> friend Modular<T> operator/(const Modular<T> &lhs, const Modular<T> &rhs) { return Modular<T>(lhs) /= rhs; }
+		template <typename T, typename U> friend Modular<T> operator/(const Modular<T> &lhs, U rhs) { return Modular<T>(lhs) /= rhs; }
+		template <typename T, typename U> friend Modular<T> operator/(U lhs, const Modular<T> &rhs) { return Modular<T>(lhs) /= rhs; }
+
+		template <typename T> friend bool operator==(const Modular<T> &lhs, const Modular<T> &rhs) { return lhs.value == rhs.value; }
+		template <typename T, typename U> friend bool operator==(const Modular<T> &lhs, U rhs) { return lhs == Modular<T>(rhs); }
+		template <typename T, typename U> friend bool operator==(U lhs, const Modular<T> &rhs) { return Modular<T>(lhs) == rhs; }
+
+		template <typename T> friend bool operator!=(const Modular<T> &lhs, const Modular<T> &rhs) { return !(lhs == rhs); }
+		template <typename T, typename U> friend bool operator!=(const Modular<T> &lhs, U rhs) { return !(lhs == rhs); }
+		template <typename T, typename U> friend bool operator!=(U lhs, const Modular<T> &rhs) { return !(lhs == rhs); }
+
+		template <typename T> friend bool operator<(const Modular<T> &lhs, const Modular<T> &rhs) { return lhs.value < rhs.value; }
+		template <typename T> friend bool operator>(const Modular<T> &lhs, const Modular<T> &rhs) { return lhs.value > rhs.value; }
+		template <typename T> friend bool operator<=(const Modular<T> &lhs, const Modular<T> &rhs) { return lhs.value <= rhs.value; }
+		template <typename T> friend bool operator>=(const Modular<T> &lhs, const Modular<T> &rhs) { return lhs.value >= rhs.value; }
+
+		template <typename U, typename T>
+		friend U& operator<<(U &stream, const Modular<T> &number) {
+			return stream << number();
+		}
+
+		template <typename U, typename T>
+		friend U& operator>>(U &stream, Modular<T> &number) {
+			typename common_type<typename Modular<T>::Type, int64_t>::type x;
+			stream >> x;
+			number.value = Modular<T>::normalize(x);
+			return stream;
+		}
+
+		template <typename T, typename U>
+		friend Modular<T> power(Modular<T> a, U b) {
+			assert(b >= 0);
+			Modular<T> res = 1;
+			while (b) {
+				if (b & 1) {
+					res *= a;
+				}
+				a *= a;
+				b >>= 1;
+			}
+			return res;
+		}
+
+		template<typename T>
+		friend Modular<T> inverse(const Modular<T> &a) {
+			assert(a.value != 0);
+			return power(a, mod() - 2);
+		}
+
+		template <typename T>
+		friend string to_string(const Modular<T> &number) {
+		  return to_string(number());
+		}
+
+	private:
+		Type value; 
+	};
+
+	//constexpr int MOD = 998244353;
+	constexpr int MOD = 1000000007;
+	using Mint = Modular<integral_constant<decay<decltype(MOD)>::type, MOD>>;
+
+	/*
+	// Dynamic Modular
+	using ModType = int;
+	struct VarMod { static ModType value; };
+	ModType VarMod::value = 1000000007;
+	ModType &MOD = VarMod::value;
+	using Mint = Modular<VarMod>;
+	*/
+
+	struct Comb {
+		int n;
+		vector<Mint> _fact;
+		vector<Mint> _inv_fact;
+		vector<Mint> _inv;
+		
+		Comb() : n{0}, _fact{1}, _inv_fact{1}, _inv{0} {}
+		Comb(int _n) : Comb() {
+			init(_n);
+		}
+		
+		void init(int m) {
+			if (m <= n) {
+				return;
+			}
+			_fact.resize(m + 1);
+			_inv_fact.resize(m + 1);
+			_inv.resize(m + 1);
+			
+			for (int i = n + 1; i <= m; i++) {
+				_fact[i] = _fact[i - 1] * i;
+			}
+			_inv_fact[m] = inverse(_fact[m]);
+			for (int i = m; i > n; i--) {
+				_inv_fact[i - 1] = _inv_fact[i] * i;
+				_inv[i] = _inv_fact[i] * _fact[i - 1];
+			}
+			n = m;
+		}
+		
+		Mint fact(int m) {
+			if (m > n) {
+				init(2 * m);
+			}
+			return _fact[m];
+		}
+		Mint inv_fact(int m) {
+			if (m > n) {
+				init(2 * m);
+			}
+			return _inv_fact[m];
+		}
+		Mint inv(int m) {
+			if (m > n) {
+				init(2 * m);
+			}
+			return _inv[m];
+		}
+		Mint comb(int m, int k) {
+			if (k < 0 || k > m) {
+				return 0;
+			}
+			return fact(m) * inv_fact(k) * inv_fact(m - k);
+		}
+	} comb;
 	${0}
 
 snippet matrix "Struct Matrix" 

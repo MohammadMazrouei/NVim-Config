@@ -17,6 +17,9 @@ snippet snippets "Snippets for C++"
 	fenwick1
 	fenwick2
 	fenwick3
+	fenwick2d1
+	fenwick2d2
+	fenwick2d3
 	segtree
 	segtreelazy
 	triestr
@@ -31,8 +34,8 @@ snippet snippets "Snippets for C++"
 	bfs
 	topsort
 	bipartite
-	ucycle
-	dcycle
+	cycleu
+	cycled
 	bridges
 	artpoints
 	bridgetree
@@ -505,17 +508,18 @@ snippet sparse2d "Sparse Table 2D for RMQ build -> O(n*m*log(n)*log(m)), query -
 	${0}
 
 snippet fenwick1 "Point Update & Range Query, O(log(n))"
+	// Point Update & Range Query, O(log(n))
 	template <typename T>
 	struct FenwickTree {
 		int n;
 		vector<T> f;
 		
-		FenwickTree() {}
+		FenwickTree() : n(0) {}
 		FenwickTree(int _n) : n(_n) {
 			f.assign(n, T{});
 		}
 		// O(n) Construction
-		FenwickTree(const vector<T> &v) {
+		FenwickTree(const vector<T>& v) {
 			n = v.size();
 			f.assign(v.begin(), v.end());;
 			for (int i = 0; i < n; i++) {
@@ -526,27 +530,27 @@ snippet fenwick1 "Point Update & Range Query, O(log(n))"
 			}
 		}
 		
-		void modify(int x, const T &v) {
+		void add(int x, const T& v) {
 			assert(x >= 0 && x < n);
 			for (int i = x; i < n; i = i | (i + 1)) {
 				f[i] += v;
 			}
 		}
-		T get(int x) {
+		T get(int x) const {
 			T res{};
 			for (int i = x; i >= 0; i = (i & (i + 1)) - 1) {
 				res += f[i];
 			}
 			return res;
 		}
-		T get(int l, int r) {
+		T get(int l, int r) const {
 			assert(l >= 0 && l <= r && r < n);
 			return get(r) - get(l - 1);
 		}
-    	// Lower bound on prefix sum array (every a[i] must be non-negative)
-		int select(const T &k) {
+		// Lower bound on prefix sum array (every element must be non-negative)
+		int select(const T& k) const {
 			T sum{};
-			int x = 0, pw = __bit_floor(unsigned(n));;
+			int x = 0, pw = __bit_floor(n);
 			for (int len = pw; len > 0; len >>= 1) {
 				if (x + len <= n && sum + f[x + len - 1] < k) {
 					sum += f[x + len - 1];
@@ -560,34 +564,43 @@ snippet fenwick1 "Point Update & Range Query, O(log(n))"
 	${0}
 
 snippet fenwick2 "Range Update & Point Query, O(log(n))"
+	// Range Update & Point Query, O(log(n))
 	template <typename T>
 	struct FenwickTree { 
 		int n;
 		vector<T> f;
 		
-		FenwickTree() {}
+		FenwickTree() : n(0) {}
 		FenwickTree(int _n) : n(_n) {
 			f.assign(n, T{});
 		}
-		FenwickTree(const vector<T> &v) {
+		// O(n) Construction
+		FenwickTree(const vector<T>& v) {
 			n = v.size();
-			f.assign(n, T{});
+			f.resize(n);
+			f[0] = v[0];
+			for (int i = 1; i < n; i++) {
+				f[i] = v[i] - v[i - 1];
+			}
 			for (int i = 0; i < n; i++) {
-				modify(i, i, v[i]);
+				int r = i | (i + 1);
+				if (r < n) {
+					f[r] += f[i];
+				}
 			}
 		}
 
-		void modify(int x, const T &v) {
+		void add(int x, const T& v) {
 			for (int i = x; i < n; i = i | (i + 1)) {
 				f[i] += v;
 			}
 		}
-		void modify(int l, int r, const T &v) {
+		void add(int l, int r, const T& v) {
 			assert(l >= 0 && l <= r && r < n);
-			modify(l, v);
-			modify(r + 1, -v);
+			add(l, v);
+			add(r + 1, -v);
 		}
-		T get(int x) {
+		T get(int x) const {
 			assert(x >= 0 && x < n);
 			T res = 0;
 			for (int i = x; i >= 0; i = (i & (i + 1)) - 1) {
@@ -599,37 +612,42 @@ snippet fenwick2 "Range Update & Point Query, O(log(n))"
 	${0}
 
 snippet fenwick3 "Range Update & Range Query, O(log(n))"
+	// Range Update & Range Query, O(log(n))
 	template <typename T>
 	struct FenwickTree {
 		int n;
 		vector<T> f_mul, f_add;
 		
-		FenwickTree() {}
+		FenwickTree() : n(0) {}
 		FenwickTree(int _n) : n(_n) {
 			f_mul.assign(n, T{});
 			f_add.assign(n, T{});
 		}
-		FenwickTree(const vector<T> &v) {
+		// O(n) Construction
+		FenwickTree(const vector<T>& v) {
 			n = v.size();
 			f_mul.assign(n, T{});
-			f_add.assign(n, T{});
+			f_add.assign(v.begin(), v.end());
 			for (int i = 0; i < n; i++) {
-				modify(i, i, v[i]);
+				int r = i | (i + 1);
+				if (r < n) {
+					f_add[r] += f_add[i];
+				}
 			}
 		}
 
-		void add(int x, T mul, T add) {
+		void modify(int x, T mul, T add) {
 			for (int i = x; i < n; i = i | (i + 1)) {
 				f_mul[i] += mul;
 				f_add[i] += add;
 			}
 		}
-		void modify(int l, int r, const T &v) {
+		void add(int l, int r, const T& v) {
 			assert(l >= 0 && l <= r && r < n);
-			add(l, v, -v * (l - 1));
-			add(r, -v, v * r);
+			modify(l, v, -v * (l - 1));
+			modify(r, -v, v * r);
 		}
-		T get(int x) {
+		T get(int x) const {
 			T mul{}, add{};
 			for (int i = x; i >= 0; i = (i & (i + 1)) - 1) {
 				mul += f_mul[i];
@@ -637,11 +655,146 @@ snippet fenwick3 "Range Update & Range Query, O(log(n))"
 			}
 			return mul * x + add;
 		}
-		T get(int l, int r) {
+		T get(int l, int r) const {
 			assert(l >= 0 && l <= r && r < n);
 			return get(r) - get(l - 1);
 		}
 	};
+	${0}
+
+snippet fenwick2d1 "Point Update & Range Query, O(log(n)*log(m))"
+	// Point Update & Range Query, O(log(n)*log(m))
+	template <typename T>
+	struct FenwickTree2D {
+		int n, m;
+		vector<vector<T>> f;
+
+		FenwickTree2D() : n(0), m(0) {}
+		FenwickTree2D(int _n, int _m) : n(_n), m(_m) {
+			f.assign(n, vector<T>(m, T{}));
+		}
+		// O(n*m) Construction
+		FenwickTree2D(const vector<vector<T>>& v) {
+			n = v.size();
+			m = v[0].size();
+			f.assign(v.begin(), v.end());
+			for (int i = 0; i < n; i++) {
+				for (int j = 0; j < m; j++) {
+					int r = j | (j + 1);
+					if (r < m) {
+						f[i][r] += f[i][j];
+					}
+				}
+			}
+			for (int j = 0; j < m; j++) {
+				for (int i = 0; i < n; i++) {
+					int r = i | (i + 1);
+					if (r < n) {
+						f[r][j] += f[i][j];
+					}
+				}
+			}
+		}
+
+		void add(int x, int y, const T& v) {
+			assert(x >= 0 && x < n);
+			assert(y >= 0 && y < m);
+			for (int i = x; i < n; i = i | (i + 1)) {
+				for (int j = y; j < m; j = j | (j + 1)) {
+					f[i][j] += v;
+				}
+			}
+		}
+		T get(int x, int y) const {
+			T res{};
+			for (int i = x; i >= 0; i = (i & (i + 1)) - 1) {
+				for (int j = y; j >= 0; j = (j & (j + 1)) - 1) {
+					res += f[i][j];
+				}
+			}
+			return res;
+		}
+		T get(int l1, int r1, int l2, int r2) const {
+			assert(l1 >= 0 && l1 <= r1 && r1 < n);
+			assert(l2 >= 0 && l2 <= r2 && r2 < m);
+			l1--, l2--;
+			return get(r1, r2) - get(l1, r2) - get(r1, l2) + get(l1, l2);
+		}
+	};
+	${0}
+
+snippet fenwick2d2 "Range Update & Point Query, O(log(n)*log(m))"
+	// Range Update & Point Query, O(log(n)*log(m))
+	template <typename T>
+	struct FenwickTree2D {
+		int n, m;
+		vector<vector<T>> f;
+
+		FenwickTree2D() : n(0), m(0) {}
+		FenwickTree2D(int _n, int _m) : n(_n), m(_m) {
+			f.assign(n, vector<T>(m, T{}));
+		}
+		// O(n*m) Construction
+		FenwickTree2D(const vector<vector<T>>& v) {
+			n = v.size();
+			m = v[0].size();
+			f.assign(n, vector<T>(m, T{}));
+			for (int i = 0; i < n; i++) {
+				for (int j = 0; j < m; j++) {
+					T up = (i > 0) ? v[i - 1][j] : T{};
+					T left = (j > 0) ? v[i][j - 1] : T{};
+					T corner = (i > 0 && j > 0) ? v[i - 1][j - 1] : T{};
+					f[i][j] = v[i][j] - up - left + corner;
+				}
+			}
+			for (int i = 0; i < n; i++) {
+				for (int j = 0; j < m; j++) {
+					int r = j | (j + 1);
+					if (r < m) {
+						f[i][r] += f[i][j];
+					}
+				}
+			}
+			for (int j = 0; j < m; j++) {
+				for (int i = 0; i < n; i++) {
+					int r = i | (i + 1);
+					if (r < n) {
+						f[r][j] += f[i][j];
+					}
+				}
+			}
+		}
+
+		void add(int x, int y, const T& v) {
+			for (int i = x; i < n; i = i | (i + 1)) {
+				for (int j = y; j < m; j = j | (j + 1)) {
+					f[i][j] += v;
+				}
+			}
+		}
+		void add(int l1, int r1, int l2, int r2, const T& v) {
+			assert(l1 >= 0 && l1 <= r1 && r1 < n);
+			assert(l2 >= 0 && l2 <= r2 && r2 < m);
+			add(l1, l2, v);
+			add(l1, r2 + 1, -v);
+			add(r1 + 1, l2, -v);
+			add(r1 + 1, r2 + 1, v);
+		}
+		T get(int x, int y) const {
+			assert(x >= 0 && x < n);
+			assert(y >= 0 && y < m);
+			T res{};
+			for (int i = x; i >= 0; i = (i & (i + 1)) - 1) {
+				for (int j = y; j >= 0; j = (j & (j + 1)) - 1) {
+					res += f[i][j];
+				}
+			}
+			return res;
+		}
+	};
+	${0}
+
+snippet fenwick2d3 "Range Update & Range Query, O(log(n)*O(log(m))"
 	${0}
 
 snippet segtree "Segment Tree, build -> O(n), update & query -> O(log(n))"
@@ -1704,24 +1857,21 @@ snippet treap "Treap, Max Heap"
 	};
 	${0}
 
-snippet dfs "Depth First Search, O(n + m)" 
+snippet dfs "Depth First Search, O(n+m)" 
     vector<bool> vis(n);
-    vector<int> in(n), out(n), order;
+    vector<int> order;
     order.reserve(n);
-    int timer = 0;
-    auto dfs = [&](auto &&self, int v) -> void {
+    auto dfs = [&](auto&& self, int v) -> void {
         vis[v] = true;
-        in[v] = timer++;
         order.push_back(v);
         for (auto u : adj[v]) {
             if (!vis[u]) {
                 self(self, u);
             }
         }
-        out[v] = timer;
     };
 
-snippet bfs "Breadth First Search, O(n + m)" 
+snippet bfs "Breadth First Search, O(n+m)" 
     constexpr int INF = 1e9;
     vector<int> dist(n, INF), par(n, -1);
     auto bfs = [&](int s) -> void {
@@ -1731,7 +1881,6 @@ snippet bfs "Breadth First Search, O(n + m)"
         while (!q.empty()) {
             int v = q.front();
             q.pop();
-
             for (auto u : adj[v]) {
                 if (dist[v] + 1 < dist[u]) {
                     q.push(u);
@@ -1742,13 +1891,13 @@ snippet bfs "Breadth First Search, O(n + m)"
         }
     };
 
-snippet topsort "Topological Sorting, O(n + m)"
-    // An order of vertices in DAG that every edge leads from 
-    // the vertex with a smaller index to a vertex with a larger one.
+snippet topsort "Topological Sorting, O(n+m)"
+    // An order of vertices in DAG that every edge leads from the vertex
+    // with a smaller index to a vertex with a larger one.
     vector<bool> vis(n);
     vector<int> order;
     order.reserve(n);
-    auto dfs = [&](auto &&self, int v) -> void {
+    auto dfs = [&](auto&& self, int v) -> void {
         vis[v] = true;
         for (auto u : adj[v]) {
             if (!vis[u]) {
@@ -1758,15 +1907,15 @@ snippet topsort "Topological Sorting, O(n + m)"
         order.push_back(v);
     };
     auto topological_sorting = [&]() -> void {
-        for (int v = 0; v < n; v++) {
-            if (!vis[v]) {
-                dfs(dfs, v);
+        for (int i = 0; i < n; i++) {
+            if (!vis[i]) {
+                dfs(dfs, i);
             }
         }
         reverse(order.begin(), order.end());
     };
 
-snippet bipartite "Check an Undirected Graph is Bipartite, O(n + m)"
+snippet bipartite "Check an undirected graph is bipartite, O(n+m)"
     vector<int> color(n, -1);
     vector<vector<int>> c(2);
     auto is_bipartite = [&]() -> bool {
@@ -1779,14 +1928,12 @@ snippet bipartite "Check an Undirected Graph is Bipartite, O(n + m)"
                 while (!q.empty()) {
                     int v = q.front();
                     q.pop();
-
                     for (auto u : adj[v]) {
                         if (color[u] == -1) {
                             color[u] = color[v] ^ 1;
                             c[color[u]].push_back(u);
                             q.push(u);
-                        }
-                        else if (color[u] == color[v]) {
+                        } else if (color[u] == color[v]) {
                             return false;
                         }
                     }
@@ -1797,11 +1944,11 @@ snippet bipartite "Check an Undirected Graph is Bipartite, O(n + m)"
         return true;
     };
 
-snippet ucycle "Find Cycle in Undirected Graph, O(n + m)" 
+snippet cycleu "Find one cycle in undirected graph, O(n+m)"
     vector<bool> vis(n);
     vector<int> par(n, -1), cycle;
     int cycle_start, cycle_end;
-    auto dfs = [&](auto &&self, int v, int p) -> bool {
+    auto dfs = [&](auto&& self, int v, int p) -> bool {
         vis[v] = true;
         for (auto u : adj[v]) {
             if (u == p) {
@@ -1822,37 +1969,38 @@ snippet ucycle "Find Cycle in Undirected Graph, O(n + m)"
     auto find_cycle = [&]() -> bool {
         cycle.clear();
         cycle_start = -1;
-        for (int v = 0; v < n; v++) {
-            if (!vis[v] && dfs(dfs, v, -1)) {
+        for (int i = 0; i < n; i++) {
+            if (!vis[i] && dfs(dfs, i, -1)) {
                 break;
             }
         }
+
         if (cycle_start == -1) {
             return false;
         } 
-
-        for (int v = cycle_end; v != cycle_start; v = par[v]) {
-            cycle.push_back(v);
+        for (int i = cycle_end; i != cycle_start; i = par[i]) {
+            cycle.push_back(i);
         }
         cycle.push_back(cycle_start);
         return true;
     };
 
-snippet dcycle "Find Cycle in Directed Graph, O(n + m)" 
+snippet cycled "Find one cycle in directed graph, O(n+m)"
     vector<int> color(n), par(n, -1), cycle;
     int cycle_start, cycle_end;
-    auto dfs = [&](auto &&self, int v) -> bool {
+    auto dfs = [&](auto&& self, int v) -> bool {
         color[v] = 1;
         for (auto u : adj[v]) {
             if (color[u] == 0) {
                 par[u] = v;
                 if (self(self, u)) {
+                    color[v] = 2;
                     return true;
                 }
-            } 
-            else if (color[u] == 1) {
+            } else if (color[u] == 1) {
                 cycle_end = v;
                 cycle_start = u;
+                color[v] = 2;
                 return true;
             }
         }
@@ -1862,17 +2010,17 @@ snippet dcycle "Find Cycle in Directed Graph, O(n + m)"
     auto find_cycle = [&]() -> bool {
         cycle.clear();
         cycle_start = -1;
-        for (int v = 0; v < n; v++) { 
-            if (color[v] == 0 && dfs(dfs, v)) {
+        for (int i = 0; i < n; i++) { 
+            if (color[i] == 0 && dfs(dfs, i)) {
                 break;
             }
         }
+
         if (cycle_start == -1) {
             return false;
         }
-
-        for (int v = cycle_end; v != cycle_start; v = par[v]) {
-            cycle.push_back(v);
+        for (int i = cycle_end; i != cycle_start; i = par[i]) {
+            cycle.push_back(i);
         }
         cycle.push_back(cycle_start);
         reverse(cycle.begin(), cycle.end());
